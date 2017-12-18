@@ -10,7 +10,7 @@
     <image class="outercicle" src="../../../imag/outerCircle.png"></image>
     <image class="innercicle" src="../../../imag/innerCircle.png"></image>
   </view>
-  <view class="run-step">{{ mySteps }}</view>
+  <view class="run-step">12345</view>
   <view class="run-info">您已贡献的步数</view>
   <view class="index-run-hill">
     <image class="hill" src="../../../imag/hill.png"></image>
