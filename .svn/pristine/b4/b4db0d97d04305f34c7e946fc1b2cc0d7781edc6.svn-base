@@ -1,0 +1,63 @@
+//index.js
+//获取应用实例
+const app = getApp()
+
+Page({
+  data: {
+    array: ['红队', '黄队', '蓝队', '紫队'],
+    index: 0,
+    inputVal:'',
+    inputNum:''
+  },
+  onLoad:function(e){
+      this.setData({
+        inputVal: app.globalData.guestName,
+        inputNum: app.globalData.guestPhone             
+      })
+  },
+  formSubmit: function (e) {
+    console.log('form发生了submit事件，携带数据为：', e.detail.value)
+    wx.request({
+     url: getApp().globalData.userInforUrl +'/user/guestSignIn',
+      // url: 'http://bwt.cesgroup.com.cn/user/isSignIn',
+      
+      data: {
+        userName: e.detail.value.name,
+        phone: e.detail.value.mobile,
+        openId: app.globalData.openId,
+        teamId: e.detail.value.teamId
+      },
+      header: {
+        'content-type': 'application/json'
+      },
+      success: function (res) {
+        console.log("嘉宾签到", res.data)
+        //res.data  true: 成功 false:失败
+        if (res.data == true) {
+          //1.设置是否登录状态位
+          //2.跳转到首页面
+          wx.setStorage({
+                  key: 'isLogin',
+                  data: true
+                });
+          wx.redirectTo({
+            url: '../userInfo/userInfo'
+          })
+        } 
+      }
+    })
+  },
+
+  // navigateTo:function(e){
+  //   wx.navigateTo({
+  //     url: '../userInfo/userInfo'
+  //   })
+
+  // },
+  bindPickerChange: function (e) {
+    console.log('picker发送选择改变，携带值为', e.detail.value)
+    this.setData({
+      index: e.detail.value
+    })
+  }
+})

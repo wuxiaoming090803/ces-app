@@ -1,0 +1,77 @@
+<view class="page-container">
+  <view class="page-body">
+    <view class="index-bg-container">
+        <image class="index-bg" src="../../../imag/ces-bg3.png"></image>
+    </view>
+    <view class="page-info">
+     <scroll-view scroll-y="true" scroll-into-view="{{toView}}" scroll-top="{{scrollTop}}">
+      <view class="page-info-image" id="page-info-image">
+       
+        <image class="index-image" src="../../../imag/banner.png"></image>
+      </view>
+      <view class="info-title-image">
+       <view class="page-info-image-desc">日期/场地</view>
+        <image class="title-image1" src="../../../imag/care.png"></image>
+      </view>
+      <view class="page-activity-info">
+        <view class="page-info-detail">活动日期:　2017年10月28日(周六)</view>
+        <view class="page-info-detail">活动地址:　青浦区练西公路2号停车场(近西宋路)</view>
+      </view>
+      <view class="info-title-image">
+       <view class="page-info-image-desc1">活动安排</view>
+        <image class="title-image2" src="../../../imag/care.png"></image>
+      </view>
+      <view class="page-info-time">
+          <view class="page-info-detail">12:30-13:00　抵达/签到/团队集合</view>
+          <view class="page-info-detail">13:00-13:50　领导致辞/基金会成立/捐赠/合影
+</view>
+          <view class="page-info-detail">13:50-16:20　公益徒步活动
+</view>
+          <view class="page-info-detail">16:20-16:30　闭幕式
+</view>
+          <view class="page-info-detail last">17:00　　　　返程</view>
+      </view> 
+      <view class="info-title-image">
+       <view class="page-info-image-desc2">注意事项</view>
+        <image class="title-image3" src="../../../imag/care.png"></image>
+      </view>
+      <view class="page-info-care" id="info-care">
+          <view class="page-info-detail">1、本次全员活动为徒步10KM,所有队员要在公园及道路上按规定路线和交通法规行走,发挥团队精神“不抛弃,不放弃”任何一名团队成员,相互鼓励,互帮互助,战胜困难,发挥正能量;
+</view>
+          <view class="page-info-detail">2、不要在身体非常不适的情况下勉强行走、不要在非正规道路上行走、不要单独行动、不要穿越丛林、靠近河边、不要与其他人员发生任何纠纷,行走到终点是我们的最重要任务;
+</view>
+          <view class="page-info-detail">3、健康状况良好,无心脏病、高血压、骨质疏松、习惯性骨折、哮喘等既往病史,没有不适宜参加激烈运动的相关疾病,可以参加本次活动;
+</view>
+          <view class="page-info-detail">4、本次比赛主办方为参加人员购买意外伤害保险,如有队员违反活动须知内容由此产生的后果由队员自行承担;</view>
+          <view class="page-info-detail">5、参赛期间所可能产生的肖像、视频等宣传资料可供组委会宣传使用,本人对此无异议;</view>
+          <view class="page-info-detail">6、认同本次赛事组委会公布的活动须知和其他相关活动规定,在活动过程中按活动须知要求参加活动;</view>
+          <view class="page-info-detail">7、一双舒适的鞋也是必备品。</view>
+      </view>
+      <view class="info-title-image">
+       <view class="page-info-image-desc3">小任务:摄影集赞</view>
+        <image class="title-image4" src="../../../imag/care.png"></image>
+      </view>
+      <view class="page-info-photo">
+          <view class="page-info-detail">规则：请集齐9张照片并配字（题目自拟）发布朋友圈,集赞数列前十名的小组有好礼相送！</view>
+          <view class="page-info-detail">照片要求:
+</view>
+          <view class="page-info-detail">1、活动中小组集体照片2张;
+</view>
+          <view class="page-info-detail">2、景区内不同植物或生物照片2张;
+</view>
+          <view class="page-info-detail">3、利用活动过程中收集的树叶,树枝等作出一副创意画的照片2张;</view>
+          <view class="page-info-detail">4、展示企业文化的照片3张。
+</view>
+          <view class="page-info-detail">获奖结果一周内在OA上公布！
+</view>
+      </view>
+      </scroll-view>
+    </view>
+    <view class="page-bottom">
+      <p  class="nav active">活动信息</p>
+      <navigator url="../userInfo/userInfo" redirect="false" class="nav">我的步数</navigator>
+      <navigator url="../mapInfo/mapInfo" redirect="true" class="nav">地图位置</navigator>  
+      <navigator url="../anchor/anchor" redirect="false" class="nav">爱心启航</navigator>    
+    </view>
+  </view>
+</view>

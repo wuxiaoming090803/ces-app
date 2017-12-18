@@ -1,0 +1,88 @@
+@import "../../common/lib/weui.wxss"; 
+/**index.wxss**/
+.index-bg-container{
+  width: 100%;
+  height: 100vh;
+}
+.index-bg{
+  width: 100%;
+  height: 100%;
+}
+.index-top-container{
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+.index-bottom-container{
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  top:64%;
+}
+.index-logo1{
+  width: 100%;
+}
+.index-logo{
+  width: 100%;
+  height: 30vh;
+}
+.index-title{
+  position: absolute;
+  top: 20%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+.index-form-container{
+  position: absolute;
+  top: 33%;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+.weui-cells_after-title{
+  width: 88%;
+  margin: 0 auto;
+  background-color: transparent;
+  border-top: none;
+}
+.weui-cell_input{
+  padding-top:5px;
+}
+.weui-input{
+  margin-left: 15%;
+}
+.index-userName{
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.index-phone{
+  width: 1.1rem;
+  height: 1.3rem;
+}
+.checkboxgroup{
+  margin: 3% auto 1% 32%;
+}
+.btn-area{
+  margin-top: 8%;
+}
+.btn-area button{
+  display: inline-block;
+}
+.subCls{
+  width: 45%;
+ 
+}
+.nav{
+  display:inline-block;
+  position:absolute;
+  bottom:-2px;
+  right:9%;
+  font-size:16px;
+  color: #656262;
+}

@@ -1,0 +1,15 @@
+<view class="page-container">
+  <view class="page-body">
+      <view class="page-info">
+       <!--<map id="myMap" longitude="{{longitude}}" latitude="{{latitude}}" scale="14"  style="width: 100%; height: 92vh;" markers="{{markers}}"  bindmarkertap="markertap"  show-location/>-->
+       <map id="myMap" longitude="{{longitude}}" latitude="{{latitude}}"  markers="{{markers}}" bindmarkertap="markertap"   style="width: 100%; height: 92vh;" polyline="{{polyline}}" show-location />
+
+      </view>
+      <view class="page-bottom">
+        <navigator url="../eventInfo/eventInfo" redirect="true" class="nav">活动信息</navigator>
+        <navigator url="../userInfo/userInfo" redirect="false" class="nav">我的步数</navigator>
+        <p  class="nav active">地图位置</p>
+        <navigator url="../anchor/anchor" redirect="false" class="nav">爱心启航</navigator>
+      </view>
+  </view>
+</view>

@@ -1,0 +1,32 @@
+//index.js
+//获取应用实例
+const app = getApp()
+
+Page({
+  data: {
+    array: ['红队', '蓝队', '黄队', '紫队'],
+    index: 0,
+    inputVal:'',
+    inputNum:''
+  },
+  onLoad:function(e){
+      this.setData({
+        inputVal: app.globalData.guestName,
+        inputNum: app.globalData.guestPhone             
+      })
+  },
+  formSubmit: function (e) {
+    console.log('form发生了submit事件，携带数据为：', e.detail.value)
+  },
+  navigateTo:function(e){
+    wx.navigateTo({
+      url: '../userInfo/userInfo'
+    })
+  },
+  bindPickerChange: function (e) {
+    console.log('picker发送选择改变，携带值为', e.detail.value)
+    this.setData({
+      index: e.detail.value
+    })
+  }
+})

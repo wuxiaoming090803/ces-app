@@ -1,0 +1,19 @@
+<view class="page-container">
+      <view class="page-info">
+        <view class="page-info-title">您已贡献的步数为:</view>
+        <view class="page-outer-cicle">
+          <view class="page-inner-cicle">
+            {{userSteps}}步
+          </view>
+        </view>
+        <view class="page-info-time">
+           <view class="page-info-durTime">活动持续时间：1:00:00</view>
+           <view class="page-info-endTime">活动剩余时间：2:00:00</view>
+        </view>
+      </view>
+      <view class="page-bottom">
+        <navigator url="../eventInfo/eventInfo" redirect="false" class="nav">活动信息</navigator>
+        <navigator url="../ggq/ggq" redirect="false" >地图显示</navigator>
+        <navigator url="userInfo" redirect="false" class="active">我的统计</navigator>
+      </view>
+</view>

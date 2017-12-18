@@ -1,0 +1,38 @@
+<!--index.wxml-->
+<view class="index-container">
+  <view class="index-bg-container">
+      <image class="index-bg" src="../../../imag/ces-bg2.png"></image>
+  </view>
+   <view class="index-title">
+    2017户外公益徒步活动
+   </view>
+    <view class="index-form-container">
+        <form bindsubmit="formSubmit">
+          <view class="weiui-army">
+            <view class="select-army" >请选择队伍</view>
+            <radio-group bindchange="radioChange" name="radio">
+              <label class="radio-group" wx:for="{{items}}">
+                <view class="weui-cell__radio">
+                  <radio value="{{item.value}}" checked='{{item.checked}}'/>
+                </view>
+                <view class="weui-cell__radioGroup" style="color:{{item.checked==true ?'#ffffff':'#989898'}};background-color:{{item.checked==true ? '#1AAD19':none}}">{{item.name}}</view>
+              </label>
+            </radio-group>
+            <radio-group bindchange="radioChange1" name="radio1">
+              <label class="radio-group" wx:for="{{items1}}">
+                <view class="weui-cell__radio">
+                  <radio value="{{item.value}}" checked='{{item.checked}}'/>
+                </view>
+                <view class="weui-cell__radioGroup" style="color:{{item.checked==true ?'#ffffff':'#989898'}};background-color:{{item.checked==true ? '#1AAD19':none}}">{{item.name}}</view>
+              </label>
+            </radio-group>
+          </view>
+          <view class="btn-area">
+            <button type="primary" formType="submit">确认</button>
+          </view>
+    </form>
+   </view>
+   <view class="index-bottom-container">
+       <image class="index-logo1" src="../../../imag/run.png"></image>
+   </view>
+</view>

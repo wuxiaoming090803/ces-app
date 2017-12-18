@@ -1,0 +1,31 @@
+//同步工具类 @wxl
+/**
+ * 同步步数
+ */
+const syncUserSteps = (currentSteps) =>{
+  console.log("同步步数");
+}
+/**
+ * 同步位置
+ */
+const syncLocation = (location)=>{
+  console.log("同步位置");
+}
+/**
+ * 同步活动时间信息
+ */
+const syscWalkTime = (callback)=>{
+  var times = {'beforeWalk':3000,'walking':5000};
+  callback(times);
+}
+
+/**
+ * 模块化暴露接口
+ */
+module.exports = {
+  syncUserSteps: syncUserSteps,
+  syncLocation: syncLocation,
+  syncWalkTime: syscWalkTime
+}
+
+

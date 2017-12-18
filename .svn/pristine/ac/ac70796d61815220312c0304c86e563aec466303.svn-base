@@ -1,0 +1,21 @@
+//index.js
+//获取应用实例
+var app = getApp()
+Page({
+  data: {
+    userSteps: 0,
+  },
+  updateCurrentSteps: function () {
+    var _this = this;
+     setInterval(function () {
+      var newData = app.globalData.userSteps;
+      _this.setData({
+        userSteps: newData
+      });
+    }, 1000);
+
+  },
+  onShow: function () {
+    this.updateCurrentSteps();
+  }
+})

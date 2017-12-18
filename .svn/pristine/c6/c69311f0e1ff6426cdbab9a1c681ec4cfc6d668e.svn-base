@@ -1,0 +1,81 @@
+//test.js
+//获取应用实例
+var WXBizDataCrypt = require('../../../utils/WXBizDataCrypt.js')
+const util = require('../../../utils/util.js')
+var AppId = 'wx115118f71009b134'
+var Secret = '4b5f3a3bf0c1e32e0fa39faf613aa1aa'
+const app = getApp()
+Page({
+
+  /**
+   * 页面的初始数据
+   */
+  data: {
+    userSteps: '0',
+    sessionKey: '',
+    stepInfoList: [],
+    // 用户当前经度
+    userLongitude: '0',
+    // 当前纬度
+    userLatitude: '0'
+  },
+
+  /**
+   * 生命周期函数--监听页面加载
+   */
+  onLoad: function (options) {
+  
+
+  },
+
+  /**
+   * 生命周期函数--监听页面初次渲染完成
+   */
+  onReady: function () {
+    setInterval(function(){
+      console.log("---onready---");
+    },1000);
+  },
+
+  /**
+   * 生命周期函数--监听页面显示
+   */
+  onShow: function () {
+
+  },
+
+  /**
+   * 生命周期函数--监听页面隐藏
+   */
+  onHide: function () {
+
+  },
+
+  /**
+   * 生命周期函数--监听页面卸载
+   */
+  onUnload: function () {
+
+  },
+
+  /**
+   * 页面相关事件处理函数--监听用户下拉动作
+   */
+  onPullDownRefresh: function () {
+
+  },
+
+  /**
+   * 页面上拉触底事件的处理函数
+   */
+  onReachBottom: function () {
+
+  },
+
+  /**
+   * 用户点击右上角分享
+   */
+  onShareAppMessage: function () {
+
+  }
+})

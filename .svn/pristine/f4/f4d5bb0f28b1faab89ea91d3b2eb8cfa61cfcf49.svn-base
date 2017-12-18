@@ -1,0 +1,30 @@
+<!--pages/ces/rankstep/rankstep.wxml-->
+
+  <!-- <view>
+    <label>信息发展2017户外公益徒步活动</label>
+    <button type="primary"> 立即刷新 </button>
+  </view> -->
+<view class="table">
+<text>信息发展2017户外公益徒步活动</text>
+  <view class="tr bg-w">
+     <view class="th">排名</view>
+    <view class="th">姓名</view>
+    <view class="th ">总步数</view> 
+     <!-- <view class="th">姓名</view>
+    <view class="th">队名</view> -->
+  </view>
+  <block wx:for="{{listData}}">
+    <view class="tr bg-g" wx:if="{{index % 2 == 0}}">
+
+      <view class="td">{{index+1}}</view>
+      <view class="td">{{item.TEAM_NAME}}</view>
+      <view class="td">{{item.allTeamStep}}</view>
+    </view>
+    <view class="tr" wx:else>
+      <view class="td">{{index+1}}</view>
+      <view class="td">{{item.TEAM_NAME}}</view>
+      <view class="td">{{item.allTeamStep}}</view>
+    </view>
+  </block>
+  <label>累计总步数：89532145</label>
+</view>

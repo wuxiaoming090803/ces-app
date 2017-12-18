@@ -1,0 +1,25 @@
+<view class="page-container">
+  <view class="page-body">
+    <view class="index-bg-container">
+        <image class="index-bg" src="../../../imag/ces-bg3.png"></image>
+    </view>
+    <view class="page-info">
+      <view class="page-info-image">
+        <image class="index-image" src="../../../imag/banner.png"></image>
+      </view>
+      <view class="page-info-time">
+          <view class="page-info-detail">10:30-11:00　参会员工由公司自行出发</view>
+          <view class="page-info-detail">13:00-13:30　抵达/签到/团队集合</view>
+          <view class="page-info-detail">13:30-14:00　主持人开场/领导讲话/出发仪式</view>
+          <view class="page-info-detail">14:00-16:00　公益徒步+趣味游戏</view>
+          <view class="page-info-detail">16:00-16:30　颁奖/闭幕式/捐赠仪式/合影</view>
+          <view class="page-info-detail last">16:30　返程</view>
+      </view> 
+    </view>
+    <view class="page-bottom">
+      <p  class="nav active">活动信息</p>
+      <navigator url="../userInfo/userInfo" redirect="false" class="nav">我的步数</navigator>
+      <navigator url="../mapInfo/mapInfo" redirect="true" class="nav">地图位置</navigator>      
+    </view>
+  </view>
+</view>

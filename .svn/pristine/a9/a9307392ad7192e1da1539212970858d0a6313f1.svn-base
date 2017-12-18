@@ -1,0 +1,6 @@
+<!--test.wxml-->
+<view class='container'>
+  <view>
+    <text>当前步数:{{userSteps}}</text>
+  </view>
+</view>

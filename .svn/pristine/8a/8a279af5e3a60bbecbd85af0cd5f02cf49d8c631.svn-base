@@ -1,0 +1,269 @@
+//index.js
+//获取应用实例
+const app = getApp();
+
+Page({
+  data: {
+    userSteps:0,
+    userInfo: {},
+    guestName:'',
+    guestPhone:'',
+    mySteps:0,
+    hasUserInfo: false,
+  },
+  //事件处理函数
+  bindViewTap: function() {
+    wx.navigateTo({
+      url: '../logs/logs'
+    })
+  },
+  bindViewCes: function () {
+    wx.navigateTo({
+      url: '../ces/test/test'
+    })
+  },
+  bindRankStep: function () {
+    wx.navigateTo({
+      url: '../ces/rankstep/rankstep'
+    })
+  },
+  showLocation: function () {
+    wx.navigateTo({
+      url: '../ces/mapInfo/mapInfo'
+    })
+  },
+  navToGuest:function(){
+    app.globalData.guestName = this.data.userName;
+    app.globalData.guestPhone = this.data.userPhone;
+    wx.navigateTo({
+      url: '../ces/guestInfo/guestInfo'
+    })
+  },
+  navigateTo: function () {
+    wx.navigateTo({ 
+      url: './../ces/userInfo/userInfo' 
+    })
+  },
+  goToDemo:function(){
+    wx.navigateTo({
+      url: '../wxl-test/demo'
+    })
+  },
+  //更新步数
+  updateCurrentSteps:function(_this){
+    var _this = this;
+    setInterval(function(){
+      console.log(app.globalData);
+      var userSteps = app.globalData.userSteps
+      var initSteps = app.globalData.initSteps
+      var newData = userSteps -initSteps
+      console.log(_this.data);
+      _this.setData({
+        mySteps: newData
+      });
+    },1000);
+    
+  },  
+  onLoad: function () {
+    app.userInfoReadyCallback = res => {
+      //先发请求查isGuest值
+      wx.request({
+        url: getApp().globalData.userInforUrl + '/user/getGuestByOpenId',
+        data: {
+          openId: app.globalData.openId
+        },
+        header: {
+          'content-type': 'application/json'
+        },
+        success : function (r){
+          //是否是嘉宾 ： 0：嘉宾   1：员工 2：未登录过
+          if (r.data == 0) {
+            app.globalData.isGuest = true; 
+          } else if (r.data == 1) {
+            app.globalData.isGuest = false; 
+          }
+        }
+      })
+      //判断用户是否签到
+      //1.根据isLogin字段判断
+      //2.根据openId判断
+      wx.getStorage({
+        key: 'isLogin',
+        success: function (res) {
+          //设置isLogin
+          app.globalData.isLogin = true;
+          if (res.data == true) {
+            wx.redirectTo({
+              url: './../ces/userInfo/userInfo'
+            })
+          }
+        },
+        fail: function () {
+          wx.request({
+            url: getApp().globalData.userInforUrl + '/user/isSignIn',
+            // url: 'http://bwt.cesgroup.com.cn/user/isSignIn',
+            data: {
+              openId: app.globalData.openId
+            },
+            header: {
+              'content-type': 'application/json'
+            },
+            success: function (res) {
+              //判断用户是否已签到
+              //1：是，0：否
+              if (res.data == 1) {
+                //表示该手机号已经注册过了，提示用户使用其他手机号
+                console.log("该用户手机号已经注册过了，直接跳到签到页面");
+                app.globalData.isLogin = true;
+                wx.redirectTo({
+                  url: './../ces/userInfo/userInfo'
+                })
+              }
+            }
+
+          })
+        }
+      })
+    }
+   
+  },
+  getUserInfo: function(e) {
+    app.globalData.userInfo = e.detail.userInfo
+    this.setData({
+      userInfo: e.detail.userInfo,
+      hasUserInfo: true
+    })
+  },
+  onShow:function(){
+    //再次验证是否授权
+    wx.getUserInfo({
+      success: function (res) {
+        app.acquireUserInfo(function (res) {
+          //回调用户登录后的回调
+          app.userInfoReadyCallback && app.userInfoReadyCallback()
+        });
+      },
+      fail: function (res) {
+        
+        app.gainOpenId(app.userInfoReadyCallback)
+      }
+    });
+  },
+  userNameInput: function (e) {
+    this.setData({
+      userName: e.detail.value
+    })
+  },
+  userPhoneInput: function (e) {
+    this.setData({
+      userPhone: e.detail.value
+    })
+  },
+  
+  formSubmit(e){
+    var _this = this;
+    var openId = app.globalData.openId;
+    console.log(app.globalData);
+    if (openId) {
+      this.doFormSubmit(e);
+    } 
+    else{
+      //再次授权
+      wx.getSetting({
+        success: function success(res) {
+          console.log(res);
+          if (!res.authSetting['scope.userInfo']) {
+            wx.showModal({
+              title: '用户未授权',
+              content: '美女or帅哥请授权您的用户信息，让我们知道您来了~~',
+              showCancel: false,
+              success: function (res) {
+                if (res.confirm) {
+                  console.log('用户点击确定')
+                  wx.openSetting({
+                    success: function success(res) {
+                      console.log('openSetting success', res.authSetting);
+                      app.acquireUserInfo(function (res) {
+                        app.globalData.openId = res.data.openid;
+                        console.info(app.globalData);
+                        _this.doFormSubmit(e);
+                      });
+                    }
+                  });
+                }
+              }
+            })
+          }
+        }
+      });
+    }
+  },
+  doFormSubmit: function (e) {
+    //1.签到之前防止两个人同时用一个账号，目前是同一个姓名，手机号只能注册一次
+    wx.request({
+      url: getApp().globalData.userInforUrl +'/user/checkNameAndPhone',
+      //url: 'http://bwt.cesgroup.com.cn/user/checkNameAndPhone',
+
+      data: {
+        userName: e.detail.value.name,
+        phone: e.detail.value.mobile
+      },
+      header: {
+        'content-type': 'application/json'
+      },
+      success: function (res) {
+        //判断用户是否已签到
+        //1：是，0：否
+        if (res.data == 1) {
+          //表示该手机号已经注册过了，提示用户使用其他手机号
+          console.log("该用户手机号已经注册过了");
+           wx.showToast({
+            title: '该用户已经注册过了',
+            icon: 'fail',
+            duration: 1000
+          })
+        } else if (res.data == 0){
+          //没有注册过
+          //获取openId考虑没有获取到（可能会出现延迟加载）
+          wx.request({
+            url: getApp().globalData.userInforUrl +'/user/signIn',
+            //url: 'http://bwt.cesgroup.com.cn/user/signIn',
+            data: {
+              userName: e.detail.value.name,
+              phone: e.detail.value.mobile,
+              openId: getApp().globalData.openId
+            },
+            header: {
+              'Content-Type': 'application/json; charset=UTF-8'
+            },
+            success: function (res) {
+              //res.data  1：成功， 2：用户名或手机不存在或不匹配
+              if (res.data == 1) {
+                //1.设置是否登录状态位以及是否嘉宾
+                //2.跳转到首页面
+                wx.setStorage({
+                  key: 'isLogin',
+                  data: true
+                });
+                app.globalData.isLogin = true;
+                app.globalData.isGuest = false;
+                wx.redirectTo({
+                  url: '../ces/userInfo/userInfo'
+                })
+                
+              } else if (res.data == 2){
+                //  提示该用户名和手机不匹配
+                console.log("用户名手机号不匹配");
+                wx.showToast({
+                  title: '用户名手机号不匹配',
+                  icon: 'fail',
+                  duration: 1000
+                })
+              }
+            }
+          })
+        }
+      }
+    })
+  }
+})

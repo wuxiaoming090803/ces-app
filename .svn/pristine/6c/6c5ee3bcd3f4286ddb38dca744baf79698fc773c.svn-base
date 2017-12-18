@@ -1,0 +1,357 @@
+//app.js
+//解密工具类
+var WXBizDataCrypt = require('utils/WXBizDataCrypt.js');
+var sync = require("./utils/sync.js");
+var AppId = 'wx115118f71009b134';
+var Secret = '4b5f3a3bf0c1e32e0fa39faf613aa1aa';
+//循环时间
+var cycleTime = 2000;
+App({
+  //全局数据
+  globalData: {
+    userInfo: null, //用户信息
+    userSteps: 0,  //当前步数
+    initStep: 0 ,
+    location: null ,//位置信息
+    isLogin:false, //登录状态
+    openId:"1111" //openId
+  },
+  //授权信息
+  auth:function(){
+    // 获取用户信息
+    wx.getSetting({
+      success: res => {
+        //授权用户信息
+        if (!res.authSetting['scope.userInfo']) {
+          wx.authorize({
+            scope: 'scope.userInfo',
+            success() {
+            }
+          })
+        }
+        //授权微信运动
+        if (!res.authSetting['scope.werun']) {
+          wx.authorize({
+            scope: 'scope.werun',
+            success() {
+            }
+          })
+        }
+        //授权位置信息
+        if (!res.authSetting['scope.userLocation']) {
+          wx.authorize({
+            scope: 'scope.userLocation',
+            success() {
+            }
+          })
+        }
+
+        	
+        
+
+        
+      }
+    })
+  },
+  /**
+   * 更新全局步数和缓存步数
+   */
+  updateGlobalAndCacheSteps: function (currentStep) {
+    //更新数据
+    getApp().globalData.userSteps = currentStep;
+    //缓存当前步数
+    wx.setStorage({
+      key: 'currentStep',
+      data: currentStep
+    });
+  },
+  /**
+   * 更新全局和缓存位置信息
+   */
+  updateGlobalAndCacheLocation: function (location) {
+    //更新数据
+    getApp().globalData.location = location;
+    //缓存当前步数
+    wx.setStorage({
+      key: 'location',
+      data: location
+    });
+  },
+  /**
+   * 获取步数及同步数据
+   * 1.获取步数
+   * 2.比较是否和缓存一样
+   */
+  acquireUserSteps: function (res) {
+    var pc = new WXBizDataCrypt(AppId, res.data.session_key);
+    wx.getWeRunData({
+      success(res) {
+        //console.log(res);
+        //console.log('解密开始')
+        var data = pc.decryptData(res.encryptedData, res.iv);
+        var stepInfoList = data.stepInfoList;
+        if(stepInfoList.length == 0){
+          return;
+        }
+        /**
+         * 当前步数：需要减去初始化步数
+         */
+        // var initStep = 0;
+         var index = stepInfoList.length - 1;
+        // var currentStep = stepInfoList[index].step - initStep;
+        var currentStep = stepInfoList[index].step;
+        /**
+         * 获取缓存数据
+         * 1.无缓存（fail）:更新全局步数和缓存步数
+         * 2.有缓存（success）:a.当前步数和缓存相同:更新本地数据b.当前步数和缓存不同则：同步数据和更新本地数据
+         */
+        wx.getStorage({
+          key: 'currentStep',
+          success: function (res) {
+            var steps = res.data;
+            if (currentStep !== steps) {
+              // 更新全局步数和缓存步数
+              console.log("--同步后台步数数据库--");
+              sync.syncUserSteps(currentStep);
+            }
+            //更新全局步数和缓存步数
+            getApp().updateGlobalAndCacheSteps(currentStep);
+
+          },
+          fail: function () {
+            // 更新全局步数和缓存步数
+            getApp().updateGlobalAndCacheSteps(currentStep);
+            console.log("--第一次同步后台步数数据库--");
+            sync.syncInit(currentStep);
+            sync.syncUserSteps(currentStep);
+          }
+        })
+        //console.log(new Date(),'当前步数 ', currentStep)
+
+        console.log('解密后 data: ', data);
+      }
+
+    })
+  },
+  /**
+   * 同步步数
+   */
+  syncUserSteps: function () {
+    wx.login({
+      success: res => {
+        // 发送 res.code 到后台换取 openId, sessionKey, unionId
+        wx.request({
+          url: 'https://api.weixin.qq.com/sns/jscode2session',
+          data: {
+            appid: AppId,
+            secret: Secret,
+            js_code: res.code,
+            grant_type: 'authorization_code'
+          },
+          header: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          method: 'GET',
+          success: function (res) {
+            getApp().acquireUserSteps(res);
+          }
+        })
+      }
+    })
+  },
+  /**
+   * 同步位置数据
+   */
+  syncLocation: function () {
+    // 获取经纬度
+    wx.getLocation({
+      success: function (res) {
+        console.log(res);
+        var newLongitude = res.longitude;
+        var newLatitude = res.latitude;
+        wx.getStorage({
+          key: 'location',
+          success: function (cacheLocation) {
+            console.log(cacheLocation, "缓存中的位置数据");
+            var location = cacheLocation.data;
+            var longitude = location.longitude;
+            var latitude = location.latitude;
+            if (newLongitude !== longitude || newLatitude !== latitude) {
+              console.log("--同步后台数据位置信息--");
+              sync.syncLocation(res);
+            }
+            //更新全局和混存位置
+            getApp().updateGlobalAndCacheLocation(res);
+
+          },
+          fail: function () {
+            // 更新全局和混存位置
+            getApp().updateGlobalAndCacheLocation(res);
+            console.log("--第一次同步后台数据位置信息--");
+            sync.syncLocation(res);
+          }
+        })
+        //缓存当前经纬度(这里能否这样存 key 未测试)
+
+
+
+        console.log("用户当前经度： ", newLongitude)
+      },
+    })
+  },
+  /**
+   * 同步数据：步数和位置
+   */
+  syncWalkData: function (walkTime) {
+    //立即同步一次
+    console.log("---活动开始：同步数据---");
+    getApp().syncUserSteps();
+    getApp().syncLocation();
+    var syncWalkDataInter = setInterval(function () {
+      walkTime = walkTime - cycleTime;
+      console.log("---同步数据---剩余：", walkTime);
+      //console.log(index);
+      if (walkTime < 0) {
+        clearInterval(syncWalkDataInter);
+        console.log("活动结束");
+      }
+      getApp().syncUserSteps();
+      getApp().syncLocation();
+
+    }, cycleTime)
+  },
+
+  /**
+   * 获取用户信息
+   * 1.先登录
+   * 2.获取用户信息
+   * 3.获取openId
+   * 4.回调函数
+   */
+
+  acquireUserInfo:function(callback){
+    wx.login({
+      success: function (res) {
+        if (res.code) {
+          var code = res.code;
+          //获取用户的信息
+          wx.getUserInfo({
+            withCredentials: true,
+            lang: 'zh_CN ',
+            success: function (res) {
+              //设置全局信息
+              getApp().globalData.userInfo = res.userInfo;
+              console.log(res);
+              // 发送 res.code 到后台换取 openId, sessionKey, unionId
+              wx.request({
+                url: 'https://api.weixin.qq.com/sns/jscode2session',
+                data: {
+                  appid: AppId,
+                  secret: Secret,
+                  js_code: code,
+                  grant_type: 'authorization_code'
+                },
+                header: {
+                  "Content-Type": "application/x-www-form-urlencoded"
+                },
+                method: 'GET',
+                success: function (res) {
+                  getApp().globalData.openId = res.data.openid;
+                  callback();
+                }
+              })
+            },
+            fail: function (res) { },
+            complete: function (res) { },
+          })
+        } else {
+          console.log('获取用户登录态失败！' + res.errMsg)
+        }
+      }
+    });
+  },
+  /**
+   * 判断用户登录
+   */
+  checkLoginUser:function(callback){
+    // var isLogin = getApp().globalData.isLogin;
+    // if (isLogin){
+    //   callback();
+    // }else{
+      
+    // }
+    console.log("------判断用户合法性-------");
+    var checkLoginUserInter = setInterval(function () {
+      var loginFlag = getApp().globalData.isLogin
+      if (loginFlag) {
+        clearInterval(checkLoginUserInter);
+        callback();
+      }else{
+        console.log("------用户不合法-------");
+      }
+    }, 1000);
+
+  },
+  /**
+   * 1.授权
+   * 2.判断用户合法性
+   * 2.判断活动合法性
+   */
+  onLaunch: function () {
+    //授权
+    this.auth();
+    //--测试合法用户--
+    // setTimeout(function(){
+    //   getApp().globalData.isLogin=true;
+    // },2000);
+    /**
+     * 获取用户信息
+     */
+    this.acquireUserInfo(function(){
+      console.log("获取用户信息结束");
+    });
+    //判断用户的合法性
+    this.checkLoginUser(function(){
+      /**
+          * 同步步数和位置开关设计方案
+          * 1.打开程序，同步距离活动开始的时间间隔 a 以及本次活动的时间间隔 b，进行本地缓存
+          * 2.活动未开始：进行循环递减a，到0
+          * 3.活动开始：每个n秒进行同步数据,并循环递减b(b-n)
+          * 4.活动结束：若b<0，则同步最后一次，然后结束同步
+          */
+
+      //判断活动合法性： 同步活动时间
+      sync.syncWalkTime(function (res) {
+        var beforeWalkTime = res.beforeWalk;
+        var walkTime = res.walking;
+        if (beforeWalkTime <= 0) {
+          //已经开始
+          if (walkTime > 0) {
+            //初始化同步一次
+            getApp().syncWalkData(walkTime);
+          }
+        } else {
+          //未开始
+          console.log("--未开始--");
+          beforeWalkTime = beforeWalkTime - 1000;
+          var beforeWalkInter = setInterval(function () {
+            console.log("--未开始--", beforeWalkTime);
+            beforeWalkTime = beforeWalkTime - 1000;
+            if (beforeWalkTime < 0) {
+              //开始
+              clearInterval(beforeWalkInter);
+              console.log("--从未开始转向活动开始--");
+              //同步数据
+              getApp().syncWalkData(walkTime);
+            }
+          }, 1000);
+        }
+      });
+
+    });
+   
+    
+  },
+
+
+})

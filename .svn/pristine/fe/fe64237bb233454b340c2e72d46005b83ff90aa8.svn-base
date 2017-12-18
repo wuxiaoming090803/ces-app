@@ -1,0 +1,44 @@
+<!--index.wxml-->
+<view class="index-content">
+  <view class="content-top">
+   <image class="index-logo" src="../../imag/ces-logo.png"></image>
+  </view>
+  <view class="content-userInfo">
+      <view class='desc welcom'>欢迎加入</view>
+      <view class='desc detail'>信息发展2017户外公益徒步活动</view>
+      <view class="inserInfo-detail">请填写个人信息</view>
+      <form catchsubmit="formSubmit" >
+        <view class="weui-cells weui-cells_after-title">
+          <view class="weui-cell weui-cell_input">
+            <label>姓名:</label><input class="weui-input" name="name" type="number" placeholder="请输入用户名" />
+          </view>
+        </view>
+        <view class="weui-cells weui-cells_after-title second">
+          <view class="weui-cell weui-cell_input">
+            <label>手机号:</label><input class="weui-input" name ="number" type="number" placeholder="请输入手机号" />
+          </view>
+        </view>
+        <view class="btn-area">
+          <button type="primary" formType="submit" bindtap='navigateTo'>签到</button>
+        </view>
+      </form>
+  </view>
+
+  <!--<view class="userinfo">
+    <button wx:if="{{!hasUserInfo && canIUse}}" open-type="getUserInfo" bindgetuserinfo="getUserInfo"> 获取头像昵称 </button>
+    <block wx:else>
+      <image bindtap="bindViewTap" class="userinfo-avatar" src="{{userInfo.avatarUrl}}" background-size="cover"></image>
+      <text class="userinfo-nickname">{{userInfo.nickName}}</text>
+    </block>
+  </view>
+  <view class="usermotto">
+    <text class="user-motto">{{userSteps}}</text>
+  </view>
+  <view>
+    <button bindtap='bindViewCes'>获取步数</button>
+    <button bindtap='bindRankStep'>获取排名</button>
+  </view>
+  <view>
+    <button bindtap='showLocation'>显示位置</button>
+  </view>-->
+</view>

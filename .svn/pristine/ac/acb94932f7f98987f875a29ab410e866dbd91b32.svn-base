@@ -1,0 +1,39 @@
+<!--index.wxml-->
+ <view class="index-content">
+  <view class="content-top">
+    <image class="index-image" src="../../../imag/banner.jpg"></image>
+  </view>
+  <view class="content-userInfo">
+    <view class="inserInfo-detail">请填写个人信息</view>
+    <form bindsubmit="formSubmit">
+      <view class="weui-cells weui-cells_after-title">
+        <view class="weui-cell weui-cell_input">
+          <label>姓名:</label>
+          <input class="weui-input" name="name" type="text" value="{{inputVal}}" placeholder="请输入用户名" />
+        </view>
+      </view>
+      <view class="weui-cells weui-cells_after-title second">
+        <view class="weui-cell weui-cell_input">
+          <label>手机号:</label>
+          <input class="weui-input" name="mobile" value="{{inputNum}}" type="number" placeholder="请输入手机号" />
+        </view>
+      </view>
+      <view class="weui-cells__title">选择队伍</view>
+      <view class="weui-cells weui-cells_after-title">
+        <view class="weui-cell weui-cell_input combobox">
+          <view class="weui-cell__hd">
+            <view class="weui-label">当前选择</view>
+          </view>
+          <view class="weui-cell-combo">
+            <picker bindchange="bindPickerChange" value="{{index}}" range="{{array}}" mode="selector" name="picker">
+              <view class="weui-input">{{array[index]}}</view>
+            </picker>
+          </view>
+        </view>
+      </view>
+      <view class="btn-area">
+        <button type="primary" formType="submit" bindtap='navigateTo'>确认</button>
+      </view>
+    </form>
+  </view>
+</view> 

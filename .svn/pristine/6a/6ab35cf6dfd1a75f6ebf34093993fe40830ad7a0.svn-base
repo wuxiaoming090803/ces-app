@@ -1,0 +1,25 @@
+<view class="page-container">
+
+  <view class="index-bg-container">
+      <image class="index-bg2" src="../../../imag/ces-bg2.png"></image>
+  </view>
+  <view class="index-modify" wx:if="{{isGuest}}">
+    <button type="default" class="btn-modify" bindtap='backTo'>注销</button>
+  </view>
+  <view class="index-run-img">
+    <image class="outercicle" src="../../../imag/outerCircle.png"></image>
+    <image class="innercicle" src="../../../imag/innerCircle.png"></image>
+  </view>
+  <view class="run-step">{{mySteps}}</view>
+  <view class="run-info">您已贡献的步数</view>
+  <view class="index-run-hill">
+    <image class="hill" src="../../../imag/hill.png"></image>
+  </view>
+  <view class="run-durtime"><p>活动持续时间：</p>{{ durationTime }}</view>
+  <view class="run-endtime"><p>活动结束时间：</p>{{ remainTime }}</view>
+  <view class="page-bottom">
+    <navigator url="../eventInfo/eventInfo" redirect="false" class="nav">活动信息</navigator>
+    <p url="userInfo" redirect="false" class="nav active">我的统计</p>
+    <navigator url="../mapInfo/mapInfo" redirect="false" class="nav">地图显示</navigator>
+  </view>
+</view>

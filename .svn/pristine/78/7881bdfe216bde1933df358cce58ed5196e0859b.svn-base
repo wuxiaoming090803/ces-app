@@ -1,0 +1,126 @@
+//index.js
+//获取应用实例
+var app = getApp()
+Page({
+  data: {
+    //默认未获取地址
+    hasLocation: false,
+    markers: [{
+      id: 0,
+      latitude: 121.002601,
+      longitude: 31.075174,
+      width: 50,
+      height: 50
+    }, {
+      id: 1,
+      latitude: 121.001092,
+      longitude: 31.065771,
+      width: 50,
+      height: 50
+      }, {
+        id: 2,
+        latitude: 121.009357,
+        longitude: 31.071153,
+        width: 50,
+        height: 50
+    }, {
+      id: 3,
+      latitude: 121.011656,
+      longitude: 31.080865,
+      width: 50,
+      height: 50
+    }],
+    polyline: [{
+      points: [{
+        longitude: 121.002601,
+        latitude: 31.075174
+      }, {
+          longitude: 121.001092,
+          latitude: 31.065771
+        }, {
+          longitude: 121.009357,
+          latitude: 31.071153
+        },
+        {
+          longitude: 121.011656,
+          latitude: 31.080865
+        }],
+      color: "#000000AA",
+      width: 2,
+      borderColor:"#000000AA",
+      borderWidth:3,
+      dottedLine: true
+    }],
+    controls: [{
+      id: 1,
+      position: {
+        left: 0,
+        top: 300 - 50,
+        width: 50,
+        height: 50
+      },
+      clickable: true
+    }]
+  },
+  regionchange(e) {
+    console.log(e.type)
+  },
+  markertap(e) {
+    console.log(e.markerId)
+  },
+  controltap(e) {
+    console.log(e.controlId)
+  },
+  onReady: function (e) {
+    // 使用 wx.createMapContext 获取 map 上下文
+    this.mapCtx = wx.createMapContext('myMap');
+  },
+  
+  onLoad : function(){
+    //this.openLocation();
+  },
+  //获取经纬度
+  getLocation: function (e) {
+    console.log(e)
+    var that = this;
+    wx.getLocation({
+      success: function (res) {
+        console.log(res)
+        that.setData({
+          hasLocation: true,
+          location: {
+            longitude: res.longitude,
+            latitude: res.latitude
+          }
+        })
+      }
+    })
+  },
+
+  //根据经纬度在地图上显示
+  openLocation: function () {
+    var that = this
+    wx.getLocation({
+      type: 'gcj02', //返回可以用于wx.openLocation的经纬度
+      success: function (res) {
+        // that.setData({
+        //   markers: [{
+        //     latitude: res.latitude,
+        //     longitude: res.longitude,
+        //     iconPath: "../../images/destination.png"
+        //   }]
+        // })
+        
+        var latitude = res.latitude
+        console.log(latitude);
+        var longitude = res.longitude
+        console.log(longitude);
+        wx.openLocation({
+          latitude: latitude ,
+          longitude: longitude,
+          name: '111'
+        })
+      }
+    })
+  }
+})

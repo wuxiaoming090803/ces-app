@@ -1,0 +1,202 @@
+// pages/ces/mapInfo/mapInfo.js
+const Config = require("../../../config.js");
+const Storage = require("../../../storage.js");
+
+Page({
+
+  /**
+   * 页面的初始数据
+   */
+  data: {
+    /*
+    get longitude() {
+      let location = Storage.get("location");
+      return (location && location != "") ? location.longitude : '120.996660'
+    },
+    get lonlatitudegitude() {
+      let location = Storage.get("location");
+      return (location && location != "") ? location.latitude : '31.063660'
+    },
+    */
+    longitude: '120.999084',
+    latitude: '31.059691',
+
+    markers: ''
+  },
+
+  /**
+   * 生命周期函数--监听页面加载
+   */
+  onLoad: function (options) {
+
+  },
+
+  /**
+   * 生命周期函数--监听页面初次渲染完成
+   */
+  onReady: function () {
+   // Storage.remove('supplyPoint');
+    console.log("地图渲染")
+    var _this = this;
+    _this.mapCtx = wx.createMapContext('myMap');
+    var markers = [];
+   // 缓存中有数据,且不是开始活动后第一次进入地图，可以读缓存数据
+    var storageSupplyPoint = Storage.get("supplyPoint");
+    console.log('读取lastSupplyUpdate');
+    console.log(Storage.get("lastSupplyUpdate"));
+    if (storageSupplyPoint && !Storage.get("lastSupplyUpdate")){
+      console.log("地图渲染(缓存)")
+      markers = storageSupplyPoint;
+      _this.setData({
+        markers: markers
+      })
+    }else{
+      console.log("地图渲染(数据库)")
+      if (Storage.get("lastSupplyUpdate")){
+        console.log("开始后第一次进入，重新读取数据")
+        //活动开始轮询方法中设置参数lastSupplyUpdate，由此参数中断
+        Storage.set("supplyUpdateFlag", true);
+        //开始活动后第一次进入地图表示位重置
+        Storage.set("lastSupplyUpdate", false);
+      }
+      wx.request({
+        url: Config.appurl + '/SupplyPoint/getAllSupplyPoint',
+        header: {
+          'content-type': 'application/json'
+        },
+        success: function (res) {
+          var data = res.data;
+          
+          for (var i = 0; i < data.length; i++) {
+            var record = data[i];
+            var recordName = record.name;
+            var iconPath = "../../../imag/supplypoint.png";
+            
+            var marker = {
+              id: record.id,
+              longitude: record.txLongitude,
+              latitude: record.txLatitude,
+              width: 30,
+              height: 30,
+              iconPath: iconPath,
+              title: record.name
+            }
+            markers.push(marker);
+          }
+          var start = {
+            id: '12340001',
+            longitude: '121.006358',
+            latitude: '31.049377',
+            width: 30,
+            height: 30,
+            iconPath: '../../../imag/startpoint.png',
+            title: '起点'
+          };
+          markers.push(start);
+          var end = {
+            id: '12340002',
+            longitude: '121.004534',
+            latitude: '31.049331',
+            width: 30,
+            height: 30,
+            iconPath: '../../../imag/endpoint.png',
+            title: '终点'
+          };
+          markers.push(end);
+          //放入全局变量
+          Storage.set("supplyPoint", markers);
+          console.log("set storageSupplyPoint 并取出来");
+          console.log(Storage.get("supplyPoint"));
+          _this.setData({
+            markers: markers
+          })
+        }
+      })
+    }
+    
+
+
+    // var iconPath = "../../../imag/supplypoint.png";
+    // var markers = [{
+    //         id: '1234001',
+    //         longitude: '121.001573',
+    //         latitude: '31.063761',
+    //         width: 30,
+    //         height: 30,
+    //         iconPath: iconPath,
+    //         title: '补给点1'
+    // }, {
+    //   id: '1234002',
+    //   longitude: '121.000693',
+    //   latitude: '31.070139',
+    //   width: 30,
+    //   height: 30,
+    //   iconPath: iconPath,
+    //   title: '补给点2'
+    //   },{
+    //     id: '1234003',
+    //     longitude: '120.989428',
+    //     latitude: '31.065305',
+    //     width: 30,
+    //     height: 30,
+    //     iconPath: iconPath,
+    //     title: '补给点3'
+    // },{
+    //   id: '1234004',
+    //   longitude: '120.997624',
+    //   latitude: '31.059625',
+    //   width: 30,
+    //   height: 30,
+    //   iconPath: iconPath,
+    //   title: '补给点4'
+    // }];
+    // _this.setData({
+    //   markers: markers
+    // })
+
+
+    
+  },
+
+  /**
+   * 生命周期函数--监听页面显示
+   */
+  onShow: function () {
+
+  },
+
+  /**
+   * 生命周期函数--监听页面隐藏
+   */
+  onHide: function () {
+
+  },
+
+  /**
+   * 生命周期函数--监听页面卸载
+   */
+  onUnload: function () {
+
+  },
+
+  /**
+   * 页面相关事件处理函数--监听用户下拉动作
+   */
+  onPullDownRefresh: function () {
+
+  },
+
+  /**
+   * 页面上拉触底事件的处理函数
+   */
+  onReachBottom: function () {
+
+  },
+
+  /**
+   * 用户点击右上角分享
+   */
+  onShareAppMessage: function () {
+
+  }
+})

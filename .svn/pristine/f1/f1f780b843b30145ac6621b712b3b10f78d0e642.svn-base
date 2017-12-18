@@ -1,0 +1,151 @@
+//test.js
+//获取应用实例
+var WXBizDataCrypt = require('../../../utils/WXBizDataCrypt.js')
+const util = require('../../../utils/util.js')
+var AppId = 'wx115118f71009b134'
+var Secret = '4b5f3a3bf0c1e32e0fa39faf613aa1aa'
+const app = getApp()
+Page({
+
+  /**
+   * 页面的初始数据
+   */
+  data: {
+    userSteps: '0',
+    sessionKey: '',
+    stepInfoList: [],
+    // 用户当前经度
+    userLongitude: '0',
+    // 当前纬度
+    userLatitude: '0'
+  },
+
+  /**
+   * 生命周期函数--监听页面加载
+   */
+  onLoad: function (options) {
+    var _this = this;
+    wx.login({
+      success: function (res) {
+
+        // 获取经纬度
+        wx.getLocation({
+          success: function (res) {
+            var longitude = res.longitude
+            var latitude = res.latitude
+            _this.setData({
+              userLongitude: longitude,
+              userLatitude: latitude
+            });
+
+            //缓存当前经纬度
+            wx.setStorage({
+              key: 'longitude',
+              data: longitude,
+              key: 'latitude',
+              data: latitude
+            })
+
+            console.log("用户当前经度： ", longitude)
+          },
+        })
+          ,
+
+        wx.request({
+          url: 'https://api.weixin.qq.com/sns/jscode2session',
+          data: {
+            appid: AppId,
+            secret: Secret,
+            js_code: res.code,
+            grant_type: 'authorization_code'
+          },
+          header: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          method: 'GET',
+          success: function (res) {
+            console.log(res);
+            var pc = new WXBizDataCrypt(AppId, res.data.session_key)
+            wx.getWeRunData({
+              success(res) {
+                console.log('解密开始')
+                var data = pc.decryptData(res.encryptedData, res.iv);
+                var stepInfoList = data.stepInfoList;
+                /**
+                 * 当前步数：需要减去初始化步数
+                 */
+                var initStep = 0;
+                var index = stepInfoList.length-1;
+                var currentStep = stepInfoList[index].step - initStep;
+                //更新数据
+                _this.setData({
+                  userSteps: currentStep
+                });
+                //缓存当前步数
+                wx.setStorage({
+                  key: 'currentStep',
+                  data: currentStep
+                })
+
+                console.log('解密后 data: ', data)
+              }
+
+            })
+          }
+        })
+      }
+    })
+
+  },
+
+  /**
+   * 生命周期函数--监听页面初次渲染完成
+   */
+  onReady: function () {
+    setInterval(function(){
+      console.log("---onready---");
+    },1000);
+  },
+
+  /**
+   * 生命周期函数--监听页面显示
+   */
+  onShow: function () {
+
+  },
+
+  /**
+   * 生命周期函数--监听页面隐藏
+   */
+  onHide: function () {
+
+  },
+
+  /**
+   * 生命周期函数--监听页面卸载
+   */
+  onUnload: function () {
+
+  },
+
+  /**
+   * 页面相关事件处理函数--监听用户下拉动作
+   */
+  onPullDownRefresh: function () {
+
+  },
+
+  /**
+   * 页面上拉触底事件的处理函数
+   */
+  onReachBottom: function () {
+
+  },
+
+  /**
+   * 用户点击右上角分享
+   */
+  onShareAppMessage: function () {
+
+  }
+})

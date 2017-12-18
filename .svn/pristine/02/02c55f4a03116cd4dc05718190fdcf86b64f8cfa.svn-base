@@ -1,0 +1,177 @@
+//index.js
+//获取应用实例
+const app = getApp();
+const Config = require("../../config.js");
+const Storage = require("../../storage.js");
+
+Page({
+  data: {
+    loaded: false,
+  },
+  onLoad: function () {
+    wx.showLoading({
+      mask: true,
+      title: '获取签到信息中',
+    })
+    var _this = this;
+    var checkLoginInterval = setInterval(function () {
+      console.log("页面加载：" + getApp().globalData.loaded);
+      //App加载完成，即用户信息获取成功
+      if (app.globalData.loaded) {
+        _this.setData({
+          loaded: true
+        });
+        clearInterval(checkLoginInterval);
+        //检查用户信息
+        let isLogin = Storage.get("isLogin");
+        if (isLogin) {
+          //用户已经注册过
+          wx.redirectTo({
+            url: '../ces/userInfo/userInfo'
+          })
+          wx.hideLoading();
+        } else {
+          //从后台获取用户信息
+          wx.request({
+            url: Config.appurl + '/user/checkSignIn',
+            data: {
+              openId: Storage.get("openId")
+            },
+            header: {
+              'content-type': 'application/json'
+            },
+            success: function (res) {
+              //判断用户是否已签到
+              //1：用户，0：嘉宾，-1：未签到
+              if (res.data >= 0) {
+                //表示该手机号已经注册过了，提示用户使用其他手机号
+                console.log("该用户手机号已经注册过了，直接跳到签到页面");
+                Storage.set("isLogin", true);
+                Storage.set("isGuest", res.data === 0);
+                wx.redirectTo({
+                  url: './../ces/userInfo/userInfo'
+                })
+              }
+              wx.hideLoading();
+            }
+          })
+        }
+      }
+    }, Config.checkLoginUserCycleTime);
+
+  },
+  onShow: function () {
+  },
+  userNameInput: function (e) {
+    this.setData({
+      userName: e.detail.value
+    })
+  },
+  userPhoneInput: function (e) {
+    this.setData({
+      userPhone: e.detail.value
+    })
+  },
+  formSubmit(e) {
+    var _this = this;
+    var openId = Storage.get("openId");
+    //console.log(app.globalData);
+    if (openId) {
+      this.doFormSubmit(e);
+    }
+    else {
+      //再次授权
+      wx.getSetting({
+        success: function success(res) {
+          console.log(res);
+          if (!res.authSetting['scope.userInfo']) {
+            wx.showModal({
+              title: '用户未授权',
+              content: '美女or帅哥请授权您的用户信息，让我们知道您来了~~',
+              showCancel: false,
+              success: function (res) {
+                if (res.confirm) {
+                  console.log('用户点击确定')
+                  wx.openSetting({
+                    success: function success(res) {
+                      console.log('openSetting success', res.authSetting);
+                      app.acquireUserInfo(function (res) {
+                        //console.info(app.globalData);
+                        _this.doFormSubmit(e);
+                      });
+                    }
+                  });
+                }
+              }
+            })
+          }
+        }
+      });
+    }
+  },
+  doFormSubmit: function (e) {
+    //1.签到之前防止两个人同时用一个账号，目前是同一个姓名，手机号只能注册一次
+    wx.request({
+      url: Config.appurl + '/user/checkNameAndPhone',
+      data: {
+        userName: e.detail.value.name,
+        phone: e.detail.value.mobile
+      },
+      header: {
+        'content-type': 'application/json'
+      },
+      success: function (res) {
+        //判断用户是否已签到
+        //1：是，0：否
+        if (res.data == 1) {
+          //表示该手机号已经注册过了，提示用户使用其他手机号
+          console.log("该用户手机号已经注册过了");
+          wx.showToast({
+            title: '该用户已经注册过了',
+            icon: 'fail',
+            duration: 1000
+          })
+        } else if (res.data == 0) {
+          //没有注册过
+          //获取openId考虑没有获取到（可能会出现延迟加载）
+          wx.request({
+            url: Config.appurl + '/user/signIn',
+            data: {
+              userName: e.detail.value.name,
+              phone: e.detail.value.mobile,
+              openId: Storage.get("openId")
+            },
+            header: {
+              'Content-Type': 'application/json; charset=UTF-8'
+            },
+            success: function (res) {
+              //res.data  1：成功， 2：用户名或手机不存在或不匹配
+              if (res.data == 1) {
+                //1.设置是否登录状态位以及是否嘉宾
+                //2.跳转到首页面
+                wx.setStorage({
+                  key: 'isLogin',
+                  data: true
+                });
+                app.globalData.isLogin = true;
+                app.globalData.isGuest = false;
+                wx.redirectTo({
+                  url: '../ces/userInfo/userInfo'
+                })
+
+              } else if (res.data == 2) {
+                //  提示该用户名和手机不匹配
+                console.log("用户名手机号不匹配");
+                wx.showToast({
+                  title: '用户名手机号不匹配',
+                  icon: 'fail',
+                  duration: 1000
+                })
+              }
+            }
+          })
+        }
+      }
+    })
+  }
+})

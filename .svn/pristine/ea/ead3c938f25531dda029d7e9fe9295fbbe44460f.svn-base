@@ -1,0 +1,196 @@
+//index.js
+//获取应用实例
+var app = getApp()
+const util = require('../../../utils/util.js')
+Page({
+  data: {
+    mySteps: 0, //当前步数
+    initSteps: 0, //初始化步数
+    durationTime:0, //持续时间：当前时间 - 开始时间
+    remainTime:0, //剩余时间:结束时间-当前时间
+    isGuest:'',
+    countTime:10,
+    isShowCount:false
+  },
+  //更新步数
+  updateCurrentSteps: function () {
+    var _this = this;
+    setInterval(function () {
+      var userSteps = app.globalData.userSteps
+      var initSteps = app.globalData.initSteps
+      var durationTime = _this.data.durationTime;
+      var newData = userSteps - initSteps
+      if (durationTime === "未开始"){
+        newData = 0;
+      }
+      _this.setData({
+        mySteps: newData,
+        initSteps: initSteps
+      });
+    }, 1000);
+
+  },
+  updateTime:function(){
+    var _this = this;
+    setInterval(function () {
+      var beginTime = app.globalData.beginTime;
+      var endTime = app.globalData.endTime
+      var now = new Date().getTime()
+      var durationTime = now - beginTime;
+      var remainTime = endTime - now;
+    
+      if (durationTime <= 0) {
+        //未开始
+        _this.setData({
+          durationTime: '未开始',
+          remainTime: util.formatDuring(endTime - beginTime)
+        });
+      }else if(remainTime<0){
+        //结束
+        _this.setData({
+          durationTime: util.formatDuring(endTime - beginTime),
+          remainTime: '已结束'
+        });
+        
+      } else {
+        _this.setData({
+          durationTime: util.formatDuring(durationTime),
+          remainTime: util.formatDuring(remainTime)
+        });
+      }
+
+    
+    }, 1000);
+   
+
+  },
+  /**
+   * 循环判断是否开始倒计时
+   */
+  isBeginCycle:function(){
+    console.log('-------倒计开始时IsBeginCycle------')
+    return new Promise(function (resolve, reject){
+       var beginTime = app.globalData.beginTime
+       var currentTime = new Date().getTime()
+       var beginTimeInter
+       var timeRange = beginTime - currentTime
+       if (beginTime && timeRange <= 0) {
+         //活动已经开始
+         resolve()
+         return
+       }
+       if (beginTime && (beginTime - currentTime)<=11000 ) {
+         //开始
+         clearInterval(beginTimeInter)
+         resolve()
+       }
+       beginTimeInter = setInterval(function () {
+        // debugger
+         console.log("当前时间："+new Date(),app.globalData)
+         let bTime = app.globalData.beginTime
+         let cTime = new Date().getTime()
+         if (beginTime && timeRange <= 0) {
+           //活动已经开始
+           clearInterval(beginTimeInter)
+           resolve() 
+           return
+         }
+         console.log('----倒计开始前：------',bTime -cTime)
+         if (bTime && (bTime - cTime) <= 11000){
+           clearInterval(beginTimeInter)
+           resolve()
+         }
+       }, 1000);
+     });
+      
+  },
+ 
+  countDown:function(){
+    console.log('-----倒计时开始-------')
+    var _this = this;
+    var isShowCount = _this.data.isShowCount;
+    var num = _this.data.countTime;
+    name = setInterval(function () {
+      _this.setData({
+        countTime:num
+      })
+      num--;
+      if (num == -1) {
+        _this.setData({
+          isShowCount: false
+        })
+        clearInterval(name);
+      }
+    }, 1000);
+  },
+  onShow: function () {
+    var _this = this;
+    var isGuest = _this.data.isGuest;
+    _this.setData({
+      isGuest: app.globalData.isGuest
+    })
+   // this.countDown();
+    this.hasAuth()
+   //倒计时
+    this.isBeginCycle().then(function(){
+      var num = app.globalData.beginTime - new Date().getTime()
+      if(num>0){
+        _this.setData({
+          'isShowCount': true,
+          'num:': num
+        })
+        _this.countDown()
+      }
+    
+    });
+    wx.getWeRunData({
+      success(res) { 
+      },
+      fail() {
+        _this.authRun();
+      }
+    })
+   
+    this.updateTime();
+    this.updateCurrentSteps();
+  },
+  backTo:function(){
+    wx.navigateTo({
+      url: '../guestInfo/guestInfo'
+    })
+  },
+  hasAuth:function(){
+    wx.getWeRunData({
+      success: function (res) {
+         app.checkStatusCycle()
+      },
+      fail: function (res) {
+        console.log('失败')
+       // app.gainOpenId(app.userInfoReadyCallback)
+      }
+    });
+  },
+  //auth run
+  authRun(){
+    //再次授权
+    wx.getSetting({
+      success: function success(res) {
+        if (!res.authSetting['scope.werun']) {
+          wx.showModal({
+            title: '用户未授权',
+            content: '美女or帅哥请授权获取运动，让我们一起happy~',
+            showCancel: false,
+            success: function (res) {
+              if (res.confirm) {
+                wx.openSetting({
+                  success: function success(res) {
+                  }
+                });
+              }
+            }
+          })
+        }
+      }
+    });
+  }
+})

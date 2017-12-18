@@ -1,0 +1,109 @@
+//index.js
+//获取应用实例
+const app = getApp()
+
+Page({
+  data: {
+    index: 0,
+    inputVal:'',
+    color:'#989898',
+    inputNum:'',
+    condition:false,
+    selectClass:'',
+    items: [
+      { value: '0', name: '红队' },
+      { value: '2', name: '蓝队' },
+      { value: 'green', name: '绿队' }
+    ],
+    items1: [
+      { value: '3', name: '紫队' },
+      { value: 'orange', name: '橙队' },
+      { value: '1', name: '黄队' },
+    ]
+  },
+  radioChange: function (e) {
+    console.log('radio发生change事件，携带value值为：', e.detail.value);
+    app.globalData.guestRank = e.detail.value;
+    var items = this.data.items;
+    var items1 = this.data.items1;
+    for (var i = 0, len = items.length; i < len; ++i) {
+      items[i].checked = items[i].value == e.detail.value
+    }
+    for (var i = 0, len = items1.length; i < len; ++i) {
+      items1[i].checked = false
+    }
+    this.setData({
+      items1: items1,
+      items: items,
+      selectClass: e.detail.value
+    });
+  },
+  radioChange1: function (e) {
+    console.log('radio发生change事件，携带value值为：', e.detail.value)
+    var items1 = this.data.items1;
+    var items = this.data.items;
+    for (var i = 0, len = items1.length; i < len; ++i) {
+      items1[i].checked = items1[i].value == e.detail.value;
+    }
+
+    for (var i = 0, len = items.length; i < len; ++i) {
+      items[i].checked = false;
+    }
+    this.setData({
+      items1: items1,
+      items:items,
+      selectClass: e.detail.value
+    });
+  },
+  onLoad:function(e){
+    this.setData({
+      inputVal: app.globalData.guestName,
+      inputNum: app.globalData.guestPhone             
+    })
+  },
+  formSubmit: function (e) {
+    console.log('form发生了submit事件，携带数据为：', e.detail.value);
+    var team;
+    var teamId = e.detail.value.radio;
+    var teamId1 = e.detail.value.radio1;
+    if (teamId!=""){
+      team = teamId;
+    } else if (teamId1 != ""){
+      team = e.detail.value.radio1;
+    } else {
+      //没有选队伍直接返回，不提交给后台
+      return;
+    }
+    //判断
+    wx.request({
+     url: getApp().globalData.userInforUrl +'/user/guestSignIn',
+      // url: 'http://bwt.cesgroup.com.cn/user/isSignIn',
+      data: {
+        userName: e.detail.value.name,
+        phone: e.detail.value.mobile,
+        openId: app.globalData.openId,
+        teamId: team
+  },
+      header: {
+        'content-type': 'application/json'
+  },
+      success:function(res){
+    debugger;
+        console.log("嘉宾签到", res.data)
+        //res.data  true: 成功 false:失败
+        if (res.data == true) {
+          //1.设置是否登录状态位
+          //2.跳转到首页面
+          app.globalData.isLogin = true;
+          wx.setStorage({
+                  key: 'isLogin',
+                  data: true
+                });
+          wx.redirectTo({
+          url: '../userInfo/userInfo'
+    })
+        } 
+      }
+    })
+  }
+})

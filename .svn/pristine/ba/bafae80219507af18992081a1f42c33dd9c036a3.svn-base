@@ -1,0 +1,33 @@
+<!--index.wxml-->
+<view class="index-container">
+  <view class="index-bg-container">
+      <image class="index-bg" src="../../imag/ces-bg2.png"></image>
+  </view>
+   <view class="index-top-container">
+       <image class="index-logo" src="../../imag/ces-logo.png"></image>
+   </view>
+    <view class="index-bottom-container">
+       <image class="index-logo1" src="../../imag/run.png"></image>
+   </view>
+ <view class="index-form-container">
+        <form bindsubmit="formSubmit">
+          <view class="weui-cells weui-cells_after-title">
+            <view class="weui-cell weui-cell_input">
+              <image class="index-userName" src="../../imag/username.png"></image>
+               <input class="weui-input" name="name" type="text" bindinput= "userNameInput" placeholder="请输入用户名" />
+            </view>
+          </view>
+          <view class="weui-cells weui-cells_after-title second">
+            <view class="weui-cell weui-cell_input">
+               <image class="index-phone" src="../../imag/phone.png"></image>
+              <input class="weui-input" name="mobile" bindinput='userPhoneInput' type="number" placeholder="请输入手机号" />
+            </view>
+          </view>
+          <view class="btn-area">
+            <button type="primary" formType="submit" class='subCls' bindtap='navigateTo'>员工入口</button>
+            <navigator url="../ces/guestInfo/guestInfo" class="nav">嘉宾入口</navigator>
+    
+          </view>
+    </form>
+   </view> 
+</view>

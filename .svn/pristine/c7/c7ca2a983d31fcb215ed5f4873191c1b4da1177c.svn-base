@@ -1,0 +1,61 @@
+//index.js
+//获取应用实例
+var app = getApp()
+Page({
+
+  data: {
+    //默认未获取地址
+    hasLocation: false
+  },
+
+
+  onLoad : function(){
+    this.openLocation();
+  },
+
+  //获取经纬度
+  getLocation: function (e) {
+    console.log(e)
+    var that = this
+    wx.getLocation({
+      success: function (res) {
+        console.log(res)
+        that.setData({
+          hasLocation: true,
+          location: {
+            longitude: res.longitude,
+            latitude: res.latitude
+          }
+        })
+      }
+    })
+  },
+
+  //根据经纬度在地图上显示
+  openLocation: function () {
+    var that = this
+    wx.getLocation({
+      type: 'gcj02', //返回可以用于wx.openLocation的经纬度
+      success: function (res) {
+
+        // that.setData({
+        //   markers: [{
+        //     latitude: res.latitude,
+        //     longitude: res.longitude,
+        //     iconPath: "../../images/destination.png"
+        //   }]
+        // })
+        
+        var latitude = res.latitude
+        console.log(latitude);
+        var longitude = res.longitude
+        console.log(longitude);
+        wx.openLocation({
+          latitude: latitude ,
+          longitude: longitude,
+          name: '111'
+        })
+      }
+    })
+  }
+})

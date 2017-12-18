@@ -1,0 +1,128 @@
+@import "../../../common/lib/weui.wxss"; 
+/**index.wxss**/
+.index-bg-container{
+  width: 100%;
+  height: 100vh;
+}
+.index-bg{
+  width: 100%;
+  height: 100%;
+}
+.index-top-container{
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+.index-bottom-container{
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  top:64%;
+}
+.index-logo1{
+  width: 100%;
+}
+.index-logo{
+  width: 100%;
+  height: 30vh;
+}
+.index-title{
+  position: absolute;
+  top: 20%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+.index-form-container{
+  position: absolute;
+  top: 33%;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+.weui-cells_after-title{
+  width: 88%;
+  margin: 0 auto;
+  background-color: transparent;
+  border-top: none;
+}
+.weiui-army{
+  margin-bottom: 4%;
+}
+.army-rank1{
+  margin-top: 5%;
+}
+.army{
+  display:inline-block;
+  margin-right:5%;
+  width:20%;
+  font-size:16px;
+  color:#989898;
+  outline:none;
+  border-radius: 0;
+  background-color:none;
+}
+.army.first{
+  margin-left: 4%;
+}
+.weui-cell__radio{
+  display: inline-block;
+}
+.weui-cell__radioGroup{
+  display:inline-block;
+  width:4em;
+  height:2em;
+  position:relative;
+  cursor:pointer;
+  border:1px solid #989898;
+  text-align:center;
+  line-height:2;
+  margin:4px;
+  color: #989898;
+}
+radio-group{
+  width:85%;
+  margin:0 auto;
+}
+radio{
+  visibility: hidden;
+  display: none;
+}
+radio:checked{
+  color: red;
+}
+.select-army{
+  margin-left:11%;
+  text-align:left;
+  color:#999999;
+  font-size:18px;
+  position: relative;
+  margin-bottom: 3%;
+}
+.select-army::after{
+  content:" ";
+position:absolute;
+left:0;
+bottom:0;
+right:0;
+height:1px;
+border-bottom:1rpx solid #666666;
+color:#D9D9D9;
+width: 86%;
+}
+.index-bottom-container{
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  top:62%;
+}
+.index-logo1{
+  width: 100%;
+  height: 255px;
+}

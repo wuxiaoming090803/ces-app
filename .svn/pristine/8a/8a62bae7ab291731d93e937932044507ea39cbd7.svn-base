@@ -1,0 +1,12 @@
+<view class="page-container">
+  <view class="page-body">
+      <view class="page-info">
+        <map id="myMap" longitude="121.002601" latitude="31.075174" scale="14" controls="{{controls}}" bindcontroltap="controltap" markers="{{markers}}" bindmarkertap="markertap" polyline="{{polyline}}" bindregionchange="regionchange" show-location/>
+      </view>
+      <view class="page-bottom">
+        <navigator url="" redirect="true" class="nav">活动信息</navigator>
+        <navigator url="ggq" redirect="true" class="active">地图显示</navigator>
+        <navigator url="../userInfo/userInfo" redirect="false" >我的统计</navigator>
+      </view>
+  </view>
+</view>

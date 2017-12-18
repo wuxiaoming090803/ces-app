@@ -1,0 +1,13 @@
+<view class="page-container">
+  <view class="page-body">
+      <view class="page-info">
+        <image class="index-bg" src="../../../imag/heart.png"></image>
+      </view>
+      <view class="page-bottom">
+        <navigator url="../eventInfo/eventInfo" redirect="true" class="nav">活动信息</navigator>
+        <navigator url="../userInfo/userInfo" redirect="false" class="nav">我的步数</navigator>
+        <navigator url="../mapInfo/mapInfo" class="nav">地图位置</navigator>
+        <p class="nav active">爱心启航</p>
+      </view>
+  </view>
+</view>

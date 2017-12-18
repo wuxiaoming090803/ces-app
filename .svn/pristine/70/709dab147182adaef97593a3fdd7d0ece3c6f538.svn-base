@@ -1,0 +1,19 @@
+{
+  "pages":[
+    "pages/index/index",
+    "pages/logs/logs",
+    "pages/ces/test/test",
+
+    "pages/ces/mapInfo/mapInfo",
+    "pages/ces/userInfo/userInfo",
+     "pages/ces/eventInfo/eventInfo",
+    "pages/ces/guestInfo/guestInfo"
+
+  ],
+  "window":{
+    "backgroundTextStyle":"light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "WeChat",
+    "navigationBarTextStyle":"black"
+  }
+}

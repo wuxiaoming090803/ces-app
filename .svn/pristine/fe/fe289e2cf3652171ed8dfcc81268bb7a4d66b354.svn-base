@@ -1,0 +1,104 @@
+//同步工具类 @wxl
+/**
+ * 初始化同步
+ */
+const util = require("util.js");
+//var syncUrl = "http://192.168.20.250:8080/sync/";
+const syncInit = (initUserSteps) =>{
+  console.log("--开始初始化同步--");
+  var openId = getApp().globalData.openId;
+  wx.request({
+    url: getApp().globalData.userInforUrl+"/sync/init",
+    data: {
+      'openId':openId,
+      'initialUserSteps': initUserSteps
+    },
+    header: {
+      'content-type': 'application/json' // 默认值
+    },
+    success: function (res) {
+      console.log("--初始化同步完成--")
+    }
+  })
+
+}
+/**
+ * 同步步数
+ */
+const syncUserSteps = (currentSteps) =>{
+  console.log("---开始同步步数----");
+  var openId = getApp().globalData.openId;
+  wx.request({
+    url: getApp().globalData.userInforUrl + "/sync/userSteps",
+    data: {
+      'openId': openId,
+      'userSteps': currentSteps
+    },
+    header: {
+      'content-type': 'application/json' // 默认值
+    },
+    success: function (res) {
+      console.log("--同步步数完成--")
+    }
+  })
+}
+/**
+ * 同步位置
+ */
+const syncLocation = (location)=>{
+  console.log("同步位置");
+  var longitude = location.longitude;
+  var latitude = location.latitude;
+  var openId = getApp().globalData.openId;
+  wx.request({
+    url: getApp().globalData.userInforUrl + "/sync/location",
+    data: {
+      'openId': openId,
+      'longitude': longitude,
+      'latitude': latitude
+    },
+    header: {
+      'content-type': 'application/json' // 默认值
+    },
+    success: function (res) {
+      console.log("--同步位置完成--")
+    }
+  })
+ 
+}
+/**
+ * 同步活动时间信息
+ */
+const syscWalkTime = (callback)=>{
+  wx.request({
+    url: getApp().globalData.userInforUrl + "/sync/time",
+    success: function (res) {
+      var data = res.data;
+      var currentTime = data.currentTime;
+      var beginTime = data.beginTime;
+      var endTime = data.endTime;
+      console.log(new Date(currentTime));
+      //   'currentTime': new Date(currentTime).getSeconds(), 
+      //   'beginTime': new Date(beginTime).getSeconds(),
+      //   'endTime': new Date(endTime).getSeconds()
+      // };
+      console.log(new Date(currentTime).getSeconds());
+    //  console.log(times);
+      callback && callback(res.data);
+    }
+  })
+
+   
+}
+
+/**
+ * 模块化暴露接口
+ */
+module.exports = {
+  syncUserSteps: syncUserSteps,
+  syncLocation: syncLocation,
+  syncWalkTime: syscWalkTime,
+  syncInit: syncInit
+}
+
+

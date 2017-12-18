@@ -1,0 +1,49 @@
+<view class="page-container">
+
+  <view class="index-bg-container">
+      <image class="index-bg2" src="../../../imag/ces-bg3.png"></image>
+  </view>
+  <view class="index-modify" wx:if="{{isGuest}}">
+    <button type="default" class="btn-modify" bindtap='backTo'>更换队伍</button>
+  </view>
+  <view class="index-run-img">
+    <image class="outercicle" src="../../../imag/outerCircle.png"></image>
+    <image class="innercicle" src="../../../imag/innerCircle.png"></image>
+  </view>
+  <view class="run-step">123456</view>
+  <view class="run-info">您已贡献的步数</view>
+  <view class="index-run-hill">
+    <image class="hill" src="../../../imag/hill.png"></image>
+  </view>
+
+  <block wx:if="{{ activityStatus ==  0}}">  
+    <view class="countDown">
+      <p class="count-dec">活动倒计时:</p>
+      <p class="count-time">{{countTime}}</p>
+    </view>
+  </block>
+  <block wx:elif="{{ activityStatus==1 }}">
+    <view class="activity">活动即将开始</view>  
+  </block>
+  <block wx:elif="{{ activityStatus==2 }}">
+      <view class="countDown" ><p class="count-dec">活动持续时间:</p><p class="count-time">{{ durationTime }}</p></view>  
+  </block>
+  <block wx:else>
+      <view class="activity">活动结束</view>  
+  </block>
+
+  <!-- <view class="activity">活动即将开始</view>  -->
+  <view class="countDown" wx-if="{{isShowCount}}">
+    <p class="count-dec">活动倒计时:</p>
+    <p class="count-time">{{countTime}}</p>
+  </view>
+  <!-- <view class="run-durtime" wx-if="{{isShowCount==false}}"><p>活动持续时间：</p>{{ durationTime }}</view> -->
+  <!-- <view class="run-durtime"><p>活动持续时间：</p>{{ durationTime }}</view>
+  <view class="run-endtime"><p>活动结束时间：</p>{{ remainTime }}</view>  -->
+  <view class="page-bottom">
+    <navigator url="../eventInfo/eventInfo" redirect="false" class="nav">活动信息</navigator>   
+    <p url="userInfo" redirect="false" class="nav active">我的步数</p>
+    <navigator url="../mapInfo/mapInfo" redirect="false" class="nav">地图位置</navigator>
+    <navigator url="../anchor/anchor" redirect="false" class="nav">爱心起航</navigator>
+  </view>
+</view>

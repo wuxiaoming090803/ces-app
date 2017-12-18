@@ -1,0 +1,94 @@
+@import "../../common/lib/weui.wxss"; 
+/**index.wxss**/
+page{
+  height: 100%;
+  font: 17px/1.5 "Microsoft Yahei",Tahoma, Helvetica, Arial, "SimSun", sans-serif;
+}
+.inserInfo-detail{
+  text-align: center;
+  margin-top: 10% ;
+  margin-bottom: 8% ;
+}
+.index-content{
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.weui-cells.second{
+  margin-top: 10px;
+}
+.weui-cell.weui-cell_input{
+  width: 80%;
+  text-align: center;
+  margin: 0 auto;
+}
+.weui-cell.weui-cell_input label{
+  text-align: left;
+  width: 60px;
+}
+.weui-cell.weui-cell_input input{
+  border: 1px solid #ddd;
+  margin-left: 20px;
+}
+.weui-cell_checkbox{
+  margin-top: 15px;
+}
+.checkboxgroup{
+  width: 100%;
+}
+.checkbox{
+  margin-left: 40%;
+  font-size: 18px;
+}
+.content-top{
+  width: 100%;
+  background-color: #fff;
+  height: 25%;
+ 
+}
+.content-top image{
+  width: 70%;
+  height: 100px;
+  margin-top: 10px;
+  margin-left: 17%;
+}
+.content-userInfo{
+  width: 100%;
+  background-color: #fff;
+  flex: 1;
+}
+.btn-area{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+}
+.btn-area button{
+  font-size: 20px;
+  line-height: 2.7666;
+}
+.desc{
+  text-align: center;
+  line-height: 32px;
+  font-size: 17px;
+}
+.userinfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.userinfo-avatar {
+  width: 128rpx;
+  height: 128rpx;
+  margin: 20rpx;
+  border-radius: 50%;
+}
+
+.userinfo-nickname {
+  color: #aaa;
+}
+
+.usermotto {
+  margin-top: 200px;
+}

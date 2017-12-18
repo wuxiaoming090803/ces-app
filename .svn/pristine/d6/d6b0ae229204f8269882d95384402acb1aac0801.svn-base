@@ -1,0 +1,763 @@
+//app.js
+//解密工具类
+var WXBizDataCrypt = require('utils/WXBizDataCrypt.js');
+var sync = require("./utils/sync.js");
+var AppId = 'wx115118f71009b134';
+var Secret = '4b5f3a3bf0c1e32e0fa39faf613aa1aa';
+//活动开始后循环时间 
+var cycleTime = 2000;
+//活动开始前循环的时间 5分钟 5*36000
+var beforeWalkCycleTime = 2000;
+//判断用户合法循环时间
+var checkLoginUserCycleTime=1000
+//循环判断活动状态时间
+var checkActiveStatusCycleTime = 1000
+//时间临界点
+var timePoint = '2017-10-28 13:00:00'
+App({
+  //全局数据
+  globalData: {
+    userInfo: null, //用户信息
+    userSteps: 0,  //当前步数
+    initSteps: 0 ,//初始化步数
+    location: null ,//位置信息
+    isLogin:false, //登录状态
+    openId:null, //openId
+    userInforUrl:'https://wx.htao.vip/walking-service',//腾讯云地址
+    //userInforUrl: 'http://localhost:8080',//本机
+    beginTime:null,
+    endTime:null,
+    isGuest:false,//true 嘉宾  false 员工
+    startFlag:false//活动开始标识
+  },
+  /**
+   * 更新全局步数和缓存步数
+   */
+  updateGlobalAndCacheSteps: function (currentStep) {
+    //更新数据
+    this.globalData.userSteps = currentStep;
+    //缓存当前步数
+    wx.setStorage({
+      key: 'currentStep',
+      data: currentStep
+    });
+  },
+  /**
+   * 更新全局和缓存位置信息
+   */
+  updateGlobalAndCacheLocation: function (location) {
+  
+    //更新数据
+    this.globalData.location = location;
+    //缓存当前步数
+    wx.setStorage({
+      key: 'location',
+      data: location
+    });
+  },
+ 
+ /**
+  * 后台解密用户步数
+  */
+ decryptUserSteps:function(callback){
+   var _this = this 
+   wx.getWeRunData({
+     success(res) {
+       var encrytedData = res.encryptedData
+       var iv = res.iv
+       wx.request({
+         url: _this.globalData.userInforUrl + '/wx/gainSteps',
+         data: {
+           'encrytedData': encrytedData,
+           'iv': iv,
+           'sessionKey': wx.getStorageSync("sessionKey")
+         },
+         header: {
+           "Content-Type": "application/x-www-form-urlencoded"
+         },
+         method: 'POST',
+         success: function (res1) {
+           console.log(res1)
+           callback && callback(res1.data.stepInfoList)
+         },
+         fail() {
+           console.log('远程获取失败')
+           //console.log('----获取步数失败----------');
+         }
+       })
+     }
+
+   })
+ },
+
+  /**
+   * 获取用户步数 new 
+   */
+  gainUserSteps: function (callback){
+    console.log('-------获取步数开始---------')
+    var _this = this
+    var sessionKey = wx.getStorageSync("sessionKey")
+    if (sessionKey) {
+      this.decryptUserSteps(function(result){
+        if (result){
+          callback && callback(result)
+        }else{
+          //后天没有sessionkey
+          _this.acquireUserInfo(function () {
+            if (_this.userInfoReadyCallback) {
+              _this.userInfoReadyCallback()
+              _this.decryptUserSteps(callback)
+            }
+          })
+        }
+      })
+    } else {
+      //前台没有sessionKey
+      this.acquireUserInfo(function(){
+        if (_this.userInfoReadyCallback) {
+          _this.userInfoReadyCallback()
+          _this.decryptUserSteps(callback)
+        }
+      })
+    }
+   
+    // wx.login({
+    //   success: res => {
+    //     // 发送 res.code 到后台换取 openId, sessionKey, unionId
+    //     wx.request({
+    //       url: 'https://api.weixin.qq.com/sns/jscode2session',
+    //       data: {
+    //         appid: AppId,
+    //         secret: Secret,
+    //         js_code: res.code,
+    //         grant_type: 'authorization_code'
+    //       },
+    //       header: {
+    //         "Content-Type": "application/x-www-form-urlencoded"
+    //       },
+    //       method: 'GET',
+    //       success: function (res) {
+    //         var pc = new WXBizDataCrypt(AppId, res.data.session_key);
+    //         wx.getWeRunData({
+    //           success(res) {
+    //             console.log('解密开始')
+    //             var data = pc.decryptData(res.encryptedData, res.iv);
+    //             var stepInfoList = data.stepInfoList;
+    //             callback && callback(stepInfoList);
+    //             console.log('解密后 data: ', data);
+    //           }
+
+    //         })
+    //       }
+    //     })
+    //   }
+    // })
+  },
+  /**
+   * 获取位置信息 
+   */
+  gainUserLocation:function(callback){
+    wx.getLocation({
+      success: function (res) {
+        callback(res);
+      },
+    })
+  },
+  /**
+   * 获取初始化步数
+   * 缓存获取
+   *  1、存在：返回，回调函数
+   *  2.不存在：请求数据库获取，然后设置缓存，回调函数
+   * 
+   */
+  gainUserInitSteps:function(callback){
+    console.log("------------获取初始化步数--------");
+    var _this = this;
+    wx.request({
+      url: _this.globalData.userInforUrl + "/sync/initData/" + _this.globalData.openId,
+      success: function (res) {
+        var result = res.data;
+        console.log("缓存初始化数据");
+        wx.setStorageSync('initSteps', result.initialUserSteps);
+       // _this.globalData.initSteps = result.initialUserSteps
+        callback && callback(result.initialUserSteps)
+      }
+    })
+  },
+
+  /**
+   * 同步位置数据
+   */
+  syncLocation: function () {
+    var _this = this;
+    this.gainUserLocation(function(res){
+      var newLongitude = res.longitude;
+      var newLatitude = res.latitude;
+      wx.getStorage({
+        key: 'location',
+        success: function (cacheLocation) {
+          //console.log(cacheLocation, "缓存中的位置数据");
+          var location = cacheLocation.data;
+          var longitude = location.longitude;
+          var latitude = location.latitude;
+          if (newLongitude !== longitude || newLatitude !== latitude) {
+           // console.log("--同步后台数据位置信息--");
+            sync.syncLocation(res);
+          }
+          //更新全局和混存位置
+          _this.updateGlobalAndCacheLocation(res);
+         // console.log("--同步后台数据位置信息--");
+        },
+        fail: function () {
+          // 更新全局和混存位置
+          _this.updateGlobalAndCacheLocation(res);
+          sync.syncLocation(res);
+          //console.log("--第一次同步后台数据位置信息--");
+        }
+      })
+    })
+  },
+
+  /**
+   * 活动开始前同步:同步初始化步数，并处理存储初始化步数
+   */
+  syncBeforeWalk: function (forceUpdate,callback) {
+    console.log("------初始化步数同步------")
+    var _this = this
+    this.gainUserSteps(function (stepInfoList){
+     // console.log("获取步数回调：",stepInfoList);
+      if (!stepInfoList || stepInfoList.length == 0) {
+        return;
+      }
+      var index = stepInfoList.length - 1;
+      //当前步数
+      var currentStep = stepInfoList[index].step;
+      //强制更新
+      if(forceUpdate){
+        _this.globalData.initSteps = currentStep;
+        let initSteps = wx.getStorageInfoSync("initSteps");
+        if(initSteps && initSteps == currentStep){
+          //不更新
+          callback && callback()
+        }else{
+          wx.setStorageSync('initSteps', currentStep)
+          sync.syncInit(currentStep).then(function (value) {
+            //因为先同步初始化后，可能再提交同步当前步数
+            callback && callback(value)
+          });
+        }
+        return 
+      }
+      _this.gainUserInitSteps(function (dbInitSteps){
+        var now =  new Date().getTime();
+        var beginTime = _this.globalData.beginTime;
+        var cacheInitSteps = wx.getStorageSync('initSteps')
+        if (null == dbInitSteps) {
+          //数据库不存在，同步初始化步数和设置混次
+          sync.syncInit(currentStep).then(function(value){
+            //因为先同步初始化后，可能再提交同步当前步数
+            callback && callback(value)
+          });
+          _this.globalData.initSteps = currentStep;
+          wx.setStorageSync('initSteps', currentStep)
+          return
+        } 
+        if (now <= beginTime){
+            //未开始，设置当前的步数
+          _this.globalData.initSteps = currentStep;
+          if (currentStep !== dbInitSteps) {
+            //初始化同步
+            sync.syncInit(currentStep).then(function (value) {
+              callback && callback(value)
+            });;
+          }
+        }else{
+          //已经开始
+          _this.globalData.initSteps = dbInitSteps;
+          callback && callback()
+        }
+      })
+    });
+  },
+  //循环开始前同步
+  syncBeforeWalkCycle: function (beforeTime){
+    console.log("--------活动前同步----------");
+    var _this = this
+    this.syncBeforeWalk(true);
+    var syncBeforeWalkInter = setInterval(function () {
+      beforeTime = beforeTime - beforeWalkCycleTime;
+      if (beforeTime < 0) {
+        clearInterval(syncBeforeWalkInter);
+        //活动时间。。
+        var beginTime = _this.globalData.beginTime;
+        var endTime = _this.globalData.endTime;
+        //开始活动同步。。。
+        _this.syncWalkingCycle(endTime-beginTime);
+        console.log("---开始前同步结束----");
+      }  
+      //同步步数
+      _this.syncBeforeWalk(true);
+      //同步位置
+      _this.syncLocation();
+    }, beforeWalkCycleTime);
+  },
+  /**
+   * 活动开始同步
+   */
+  syncWalking:function(){
+    console.log('活动中同步')
+    var _this = this
+    this.gainUserSteps(function (stepInfoList) {
+      
+      if (!stepInfoList || stepInfoList.length == 0) {
+        return;
+      }
+      // if (!stepInfoList || stepInfoList.length == 0) {
+      //   return;
+      // }
+      var index = stepInfoList.length - 1;
+      //当前步数
+      var currentStep = stepInfoList[index].step;
+      //上次步数
+      var latestSteps = _this.globalData.userSteps;
+      if (currentStep !== latestSteps) {
+        //初始化同步
+        sync.syncUserSteps(currentStep);
+        _this.globalData.userSteps = currentStep;
+      }
+    });
+  },
+
+  syncWalkingCycle:function(walkingTime){
+    
+    var _this = this
+    this.syncWalking();
+    this.syncLocation();
+    var syncWalkingCycleInter = setInterval(function(){
+      console.log("---活动开始同步：剩余：", walkingTime);
+      walkingTime = walkingTime - cycleTime;
+      if (walkingTime <0){
+        clearInterval(syncWalkingCycleInter);
+        console.log("------结束活动循环同步-------");
+      }
+      _this.syncWalking();
+      _this.syncLocation();
+    },cycleTime);
+  },
+
+  /**
+   * 获取用户信息
+   * 1.先登录
+   * 2.获取用户信息
+   * 3.获取openId
+   * 4.回调函数
+   */
+
+  acquireUserInfo:function(callback){
+    var _this = this;
+    wx.login({
+      success: function (res) {
+        if (res.code) {
+          var code = res.code;
+          //获取用户的信息
+          wx.getUserInfo({
+            withCredentials: true,
+            lang: 'zh_CN ',
+            success: function (res) {
+              console.log("------获取UserInfo成功-------")
+              //设置全局信息
+              _this.globalData.userInfo = res.userInfo;
+              // 发送 res.code 到后台换取 openId, sessionKey, unionId
+              wx.request({
+                url: _this.globalData.userInforUrl +'/wx/userInfo',
+                data: {
+                  code: code
+                },
+                header: {
+                  "Content-Type": "application/x-www-form-urlencoded"
+                },
+                method: 'GET',
+                success: function (res1) {
+                  let openId = res1.data.openId
+                  let sessionKey = res1.data.sessionKey
+                  _this.globalData.openId = openId;
+                  wx.setStorageSync("openId", openId)
+                  wx.setStorageSync("sessionKey", sessionKey)
+                  callback && callback(res1)
+                },
+                fail(){
+                  console.log('----获取用户openID失败----------');
+                }
+              })
+            },
+            fail: function (res) { },
+            complete: function (res) { },
+          })
+        } else {
+          console.log('获取用户登录态失败！' + res.errMsg)
+        }
+      }
+    });
+  },
+  /**
+   * 判断用户登录
+   */
+  checkLoginUser:function(callback){
+    console.log("------判断用户合法性-------");
+    var _this = this;
+    if (this.globalData.isLogin){
+      callback && callback();
+    }
+    var checkLoginUserInter = setInterval(function () {
+      var loginFlag = _this.globalData.isLogin
+      if (loginFlag) {
+        callback && callback();
+        clearInterval(checkLoginUserInter)
+      }else{
+        console.log("------用户不合法-------");
+      }
+    }, checkLoginUserCycleTime);
+
+  },
+  /**
+   * 1.授权并获取用户信息及openid
+   * 2.判断用户合法性
+   * 2.判断活动合法性
+   */
+  onLaunch: function () {
+    var _this = this;
+    console.log("-----------app onLaunch-----------");
+    console.log('------开始获取用用户的openId----------');
+    //获取用户信息，并写入APPID，此时如果不写的在登录时候强制写入
+    var openId = wx.getStorageSync("openId")
+    this.getUserInfo()
+    // if(!openId){
+    //   this.getUserInfo()
+    // }else{
+    //   this.globalData.openId = openId
+    // }
+    this.acquireActiveStatusCycle(function (res) {
+      debugger
+      //活动确定，并开始
+      console.log('获取活动状态结束:', res)
+      _this.globalData.startFlag = res.data.start //设置活动开始标识
+      var beginTime = res.data.beginTime
+      var endTime = res.data.endTime
+      _this.globalData.beginTime = beginTime
+      _this.globalData.endTime = endTime
+      var now = new Date().getTime()
+      console.log('beginTime:', beginTime)
+      console.log('endTime:', endTime)
+      console.log('range:', endTime - now)
+      _this.syncWalkDataCycle(endTime - now)
+    })
+   
+    //this.checkUser()
+   //  this.checkStatusCycle()
+
+   
+  },
+  /**
+   * 获取用户的信息及openId
+   */
+  getUserInfo: function(){
+    var _this = this
+    wx.getUserInfo({
+      success: function (res) {
+        _this.acquireUserInfo(function (res) {
+          wx.checkSession({
+            success: function (res) {
+              //session 未过期，并且在本生命周期一直有效
+              _this.acquireUserInfo(function (res) {
+                //回调用户登录后的回调
+                _this.userInfoReadyCallback && _this.userInfoReadyCallback()
+              });
+            },
+            fail: function () {
+              //登录态过期
+              console.log("已经过期")
+              _this.acquireUserInfo(function (res) {
+                //回调用户登录后的回调
+                _this.userInfoReadyCallback && _this.userInfoReadyCallback()
+
+              });
+            }
+          })
+
+        });
+      },
+      fail: function (res) {
+        //强制获取用户信息
+        console.log('获取用户信息失败')
+        wx.getSetting({
+          success: function success(res) {
+            if (res.authSetting["scope.userInfo"] == undefined) {
+              wx.showToast({
+                title: '获取用户信息失败',
+                icon: 'warn',
+                duration: 2000
+              })
+              return
+            } else if (!res.authSetting['scope.userInfo']) {
+              _this.gainOpenId(_this.userInfoReadyCallback)
+            }
+          }
+        });
+
+      }
+    });
+  },
+
+  /**
+   * 获取用户的openId,包括强制授权
+   */
+  gainOpenId: function (userInfoReadyCallback){
+    var _this = this;
+    var openId = this.globalData.openId;
+    if (!openId) {
+      wx.getSetting({
+        success: function success(res) {
+          if (!res.authSetting['scope.userInfo']) {
+            wx.showModal({
+              title: '用户未授权',
+              content: '美女or帅哥请授权您的用户信息，让我们知道您来了~~',
+              showCancel: false,
+              success: function (res) {
+                if (res.confirm) {
+                  wx.openSetting({
+                    success: function success(res) {
+                      _this.acquireUserInfo(function (res) {
+                        userInfoReadyCallback()
+                      });
+                    }
+                  });
+                }
+              }
+            })
+          }
+        }
+      });
+    }
+  },
+  /**
+   * 判断用是否登录，以及获取当前时间
+   */
+  checkUser:function(){
+      var _this = this
+      wx.getSetting({
+        success: function success(res) {
+          if (res.authSetting["scope.userInfo"] == undefined || !res.authSetting['scope.userInfo']) {
+            wx.showToast({
+              title: '获取用户信息失败',
+              icon: 'fail',
+              duration: 2000
+            })
+            return
+          } else{
+            _this.checkLoginUser(function () {
+              console.log('--------用户已经合法---------');
+              sync.syncWalkTime(function (res) {
+                var currentTime = res.currentTime;
+                var beginTime = res.beginTime;
+                var endTime = res.endTime;
+                //设置全局的活动时间
+                _this.globalData.beginTime = beginTime;
+                _this.globalData.endTime = endTime;
+                //距离活动开始时间
+                var beforeWalkTime = beginTime - currentTime;
+                //活动持续时间
+                var walkDuraionTime = endTime - beginTime;
+                //活动剩余时间
+                var walkRemainTime = endTime - currentTime;
+                //console.log(_this.globalData)
+                //活动结束判断
+                if (walkRemainTime <= 0) {
+                  console.log('---------活动已经结束------------');
+                  return;
+                } else {
+                  if (beforeWalkTime <= 0) {
+                    //已经开始
+                    if (walkRemainTime > 0) {
+                      console.log(_this.globalData, " 开始后后的")
+                      //初始化同步一次
+                      _this.syncBeforeWalk(false, function () {
+                        //同步活动
+                        
+                      });
+                      _this.syncWalkingCycle(walkRemainTime);
+
+                    }
+                  } else {
+                    //未开始
+                    console.log("--未开始 每5分钟初始化同步一次--");
+                    _this.syncBeforeWalkCycle(beforeWalkTime);
+                  }
+
+                }
+              });
+            });
+          }
+        }
+      });
+     
+       
+  },
+  /**
+   * 活动状态检查
+   */
+  checkStatusCycle:function(){
+    var _this = this
+    this.globalData.status = 1
+    this.gainStatus(function(res){
+      if (res) {
+        clearInterval(statusInter)
+      } 
+    })
+    clearInterval(statusInter)
+    var statusInter = setInterval(function(){
+      _this.globalData.status = _this.globalData.status+1
+      _this.gainStatus(function (res) {
+        if (res) {
+          clearInterval(statusInter)
+          _this.checkUser()
+        }
+      })
+    },2000);
+  },
+
+  gainStatus:function(callback){
+    var _this = this
+    if (_this.globalData.status == 5) {
+      callback(true)
+    } else {
+      callback(false)
+    }
+    
+    //发送请求获取状态
+    // wx.request({
+      //   url: "http://www.baidu.com",
+      //   success:function(res){
+      //     console.log("循环获取",res);
+      //     reslove(res)
+      //   }
+      // })
+  },
+  onShow: function () {
+    this.userInfoReadyCallback && this.userInfoReadyCallback()
+  },
+
+
+
+
+
+
+
+
+  //------------------邪恶的分隔符----------------------
+  /**
+   * 获取当前活动的状态
+   */
+  acquireActiveStatus:function(){
+    var _this = this
+    return new Promise(function (resolve, reject) {
+      wx.request({
+        url: _this.globalData.userInforUrl+"/wx/runStatus",
+        success: function (res) {
+          resolve(res)
+        }
+      })
+    })
+  },
+  /**
+   * 循环获取当前活动的状态
+   */
+  acquireActiveStatusCycle: function (callback) {
+    var _this = this
+    //清除之前的
+    clearInterval(acquireActiveStatusCycleInter)
+    //立即执行一次
+    // this.acquireActiveStatus().then(function (res) {
+    //   // 需要添加判断体
+    //   if(res.data && res.data.start){
+    //     callback && callback(res)
+    //     return 
+    //   }else{
+       
+    //   }
+    // })
+    
+    //循环获取当前
+    var acquireActiveStatusCycleInter = setInterval(function () {
+      console.log('循环获取当前活动状态:',new Date())
+      _this.acquireActiveStatus().then(function (res) {
+        if (res.data && res.data.start) {
+          clearInterval(acquireActiveStatusCycleInter)
+          
+        }
+        callback && callback(res)
+        return
+      })
+    }, checkActiveStatusCycleTime);
+  },
+
+  /**
+   * 同步数据内容
+   */
+  syncWalkData: function () {
+    console.log('活动中同步')
+    var _this = this
+    this.gainUserSteps(function (stepInfoList) {
+      if (!stepInfoList || stepInfoList.length == 0) {
+        return;
+      }
+      // if (!stepInfoList || stepInfoList.length == 0) {
+      //   return;
+      // }
+      var index = stepInfoList.length - 1;
+      //当前步数
+      var currentStep = stepInfoList[index].step;
+      //上次步数
+      var latestSteps = _this.globalData.userSteps || wx.getStorageSync("userSteps");
+      _this.globalData.userSteps = currentStep
+      var initSteps = wx.getStorageSync('initSteps')
+      if(!initSteps){
+        //第一次
+        wx.setStorageSync('initSteps', currentStep)
+        wx.setStorageSync('userSteps', currentStep)
+        //设置初始化步数
+        _this.globalData.initSteps = currentStep
+        sync.syncSteps(currentStep)
+      }else{
+        //不是第一次
+        _this.globalData.initSteps = initSteps
+       
+        if (currentStep != latestSteps) {
+          //初始化同步
+          sync.syncSteps(currentStep)
+          wx.setStorageSync('userSteps', currentStep)
+        }
+      }
+    });
+  },
+  //循环同步时间
+  syncWalkDataCycle: function (walkingTime){
+    if(walkingTime < 0){
+      return;
+    }
+    var _this = this
+    this.syncWalkData();
+    this.syncLocation();
+    var syncWalkDataCycleInter = setInterval(function () {
+      console.log("---活动开始同步：剩余：", walkingTime);
+      walkingTime = walkingTime - cycleTime;
+      if (walkingTime < 0) {
+        clearInterval(syncWalkDataCycleInter);
+        console.log("------结束活动循环同步-------");
+      }
+      _this.syncWalkData();
+      _this.syncLocation();
+    }, cycleTime);
+  }
+
+
+})

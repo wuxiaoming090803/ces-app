@@ -1,0 +1,182 @@
+//index.js
+//获取应用实例
+const app = getApp();
+const Config = require("../../../config.js");
+const Storage = require("../../../storage.js");
+const util = require('../../../utils/util.js');
+
+Page({
+  data: {
+    mySteps: 0, //当前步数
+    initSteps: 0, //初始化步数
+    durationTime: 0, //持续时间：当前时间 - 开始时间
+    remainTime: 0, //剩余时间:结束时间-当前时间
+    isGuest: false,
+    countTime: 10,
+    isShowCount: false,
+    activityStatus: null
+  },
+  onLoad: function () {
+    var _this = this;
+    this.setData({
+      isGuest: Storage.get("isGuest")
+    });
+    if (app.globalData.userInfoTimer) {
+      return;
+    }
+    app.globalData.userInfoTimer = true;
+
+    //定时获取活动状态
+    app.acquireActiveStatusCycle(function (res) {
+      //活动确定，并开始
+      console.log('获取活动状态完成:', res)
+      Storage.set("startFlag", res.data.start);
+      var beginTime = res.data.beginTime
+      var endTime = res.data.endTime
+      Storage.set("beginTime", beginTime);
+      Storage.set("endTime", endTime);
+      var now = new Date().getTime()
+      console.log('开始时间:', new Date(beginTime))
+      console.log('结束时间:', new Date(endTime))
+      console.log('距离结束时间:', endTime - now)
+      //活动开始
+      if (res.data.start) { 
+        if (endTime && now > endTime){
+          //活动结束
+          return 
+        }      
+        let initSteps = Storage.get("initSteps");
+        if (initSteps != "" && initSteps > 0) {
+          //已经初始化，开始步数获取
+          if (app.globalData.syncTimer) {
+            return;
+          }
+          app.globalData.syncTimer = true;
+          app.syncWalkingCycle();
+        } else {
+          //进行初始化后，进行步数获取
+          app.syncBeforeWalk(true, function(){
+            if (app.globalData.syncTimer) {
+              return;
+            }
+            app.globalData.syncTimer = true;
+            app.syncWalkingCycle();
+          });
+        }
+        
+      }
+    });
+    //计时器
+    this.setActivtyStatusCycle();
+  },
+  onShow: function () {
+    console.log('----userinfo show-----')
+    this.checkRunAuthAndForceAuth(function(){
+      console.log("设置运动权限成功")
+    });
+   
+    
+  },
+  backTo: function () {
+    wx.navigateTo({
+      url: '../guestInfo/guestInfo'
+    })
+  },
+
+  //------------------万恶分割线---------------------
+  //根据条件设置不同的状态为
+  setActivtyStatus: function () {
+    //console.log("获取计时状态");
+    var currentTime = new Date().getTime()
+    var startFlag = Storage.get("startFlag");
+    var endTime = Storage.get("endTime");
+    var beginTime = Storage.get("beginTime");
+    var initSteps = Storage.get("initSteps") || 0;
+    var userSteps = Storage.get("userSteps") || 0;
+    var mySteps = userSteps - initSteps;
+    if (endTime && currentTime > endTime) {
+      //活动结束
+      this.setData({
+        activityStatus: 3,
+        mySteps: mySteps
+      })
+      return
+    }
+    if (currentTime < beginTime) {
+      var countDownTime = beginTime - currentTime;
+      //活动倒计时
+      this.setData({
+        activityStatus: 0,
+        countTime: util.timeFormat(countDownTime)
+      })
+      return
+    }
+    var status;
+    //判断活动标识位置
+    if (startFlag) {
+      //已经开始
+      status = 2
+      //修改持续时间
+      var durationTime = currentTime - beginTime
+      this.setData({
+        activityStatus: 2,
+        durationTime: util.formatDuring(durationTime),
+        mySteps: mySteps
+      })
+    } else {
+      //即将开始
+      status = 1
+    }
+    //设置活动状态
+    this.setData({
+      activityStatus: status
+    })
+  },
+  setActivtyStatusCycle: function () {
+    var _this = this
+    this.setActivtyStatus()
+    var setActivtyStatusCycleInter = setInterval(function () {
+      if (_this.data.activityStatus && _this.data.activityStatus == 3) {
+        //活动结束，结束循环
+        clearInterval(setActivtyStatusCycleInter)
+        return
+      }
+      _this.setActivtyStatus()
+    }, 1000);
+  },
+  //判断是否有读取用户步数的权限
+  checkRunAuthAndForceAuth: function (callback) {
+    wx.getWeRunData({
+      success: function () {
+        callback && callback()
+      },
+      fail: function () {
+        console.log('获取步数失败')
+        wx.getSetting({
+          success: function success(res) {
+            if (!res.authSetting['scope.werun']) {
+              wx.showModal({
+                title: '用户未授权',
+                content: '美女or帅哥请授权您的微信运动步数，让我们一起happy~~',
+                showCancel: false,
+                success: function (res) {
+                  if (res.confirm) {
+                    wx.openSetting({
+                      success: function success(res) {
+                        //获取授权面板
+                      }
+                    });
+                  }
+                }
+              })
+            }
+          }
+        });
+        
+        
+      }
+    })
+  }
+  
+
+})
